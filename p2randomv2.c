@@ -241,20 +241,85 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 	}
 	*/
 }
-int search(int probe, int idx) {
-
+//return 0 for exact key, 1 for move left on node, 2 on move right
+int check_node(int key, int val) {
+	
+	if(key < val)
+		return 1;
+	else if (key > val)
+		return 2;
 	return 0;
 }
 
-int binary_search(int32_t *tree [], int fan [], int p, int max){
+int binary_search(int32_t *tree [], int fan [], int probe, int max){
 
-	int i, idx;
+	//right now func will output the index of tree, not the range, need a way to calc range
+
+	int idx,  out, right, left;
+	int lvl = 0; //keeps track of which level of tree you are on
+	int node = 0;//keeps track of which node you are on
 	int range = 0;
 
-	idx = (int)(fan[0]-1)/2;
-	search(p,idx);
+	//iterate through each level of tree, searching for range
+	while(lvl < max){
+		idx = (int)((fan[lvl]-1)/2); //initial pt of search, fanout tells # of slots per node
+		right = 0;
+		left = 0;
+		while((idx >= 0) && (idx < (fan[lvl])-1)){ //while on same node
+			out = check_node(probe, *(tree[lvl]+idx+node));//compare node
+			printf("%d   %d   %d\n", lvl, node, idx);
+			printf("out:%d\n", out);
+			if(out == 0) { 		//found key
+				//set range
+				return range;
+			}
+			else if(out == 1 && right == 0){ //move left but never moved right- go left
+				left = 1;
+				idx--;	
+			}
+			else if (out == 1 && right == 1){ //move left but moved right already- go down tree from cur idx
+				if(lvl == max-1) {
+					//set range
+					return range;
+				}
+				node = idx*fan[lvl+1];
+				break;
+			}	
+			else if (out == 2 && left == 0){ //move right, but never moved left- go right
+				right = 1;
+				idx++;
+			}
+			else if(out == 2 && left == 1){ //move right, but moved left already- go down tree from cur idx
+				if(lvl == max-1) {
+					//set range
+					return range;
+				}
+				node = idx*fan[lvl+1];
+				break;
+			}	
+		}
+		if (idx < 0) { //move down left
+			if(lvl == max-1) {
+				//set range
+				return range;
+			}
+			printf("move down left\n");
+			node = 0;
+		}
+		else if (idx > fan[lvl]) { //move down right
+			if(lvl == max-1) {
+				//set range
+				return range;
+			}
+			printf("move down right");
+			printf("%d\n", idx);
+			node = idx*(fan[lvl+1]-1);
+		}	
+		
+		lvl++;
+	}
 
-	return range;
+	return -1;
 }
 
 int main(int argc, char **argv)
@@ -283,6 +348,7 @@ int main(int argc, char **argv)
 	int maxKeys = 0;
 	int k, j;
 	int f = 1;
+	/*
 	printf("keys\n");
 	for (i = 0 ; i < n ; ++i) {
 		printf("%d\n", a[i]);
@@ -291,6 +357,8 @@ int main(int argc, char **argv)
 	for (i=0; i< n2; ++i) {
 		printf("%d\n", p[i]);
 	}
+	*/
+
 	// TODO: make sure arc2 is > 1
 	printf("n: %zu, argc-3: %d\n", n, level);
 
@@ -319,12 +387,12 @@ int main(int argc, char **argv)
 	for(k = 0; k < level; k++) {
 		printf("%d\n",index[k]);
 	}
-
+	
 	if(index[0] == 0) {
 		fprintf(stderr, "ERROR: Not enough keys! Root is empty!\n\n");
 		return EXIT_FAILURE;
 	}
-
+	
 	//print tree
 	for (k = 0; k < level; k++) {
 		printf("Level%d\n", k);
@@ -347,7 +415,6 @@ int main(int argc, char **argv)
 	for(k = 0; k < n2; k++) {
 		printf("%d\n", out[k]);
 	}
-
 	free(a);
 	free(p);
 	free(index);
