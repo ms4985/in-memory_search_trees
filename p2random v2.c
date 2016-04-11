@@ -114,13 +114,15 @@ void create_tree(int32_t *keys, int n, char **level, int numLevels) {
 	// TODO: use memset or something more efficient to initialize index array
 	// TODO: free memory
 	// TODO: check for off by one errors, especially w/ fanout vs. capacity
+	// TODO: make sure strtol returns > 2
 
 	int error = 0;
 
 	// create array which holds pointers to the start of each level
 	// tree[0] = root level; tree[1] = next ... tree[numLevels - 1] = leaves
 	int32_t *tree[numLevels];// = malloc(sizeof(int32_t *) * numLevels);
-	int i = 0;
+	int i = 0, j = 0;
+	long fanout = 1;
 	long arraySize = 1;
 	char *ptr;
 
@@ -133,6 +135,9 @@ void create_tree(int32_t *keys, int n, char **level, int numLevels) {
 	// capacity of each level
 	int maxSizes[numLevels];
 
+	// tells the fanout at each level  - can use strtol(level[i]...) instead
+	//int fans[numLevels];
+
 	//printf("%d",numLevels);
 	// TODO: fix this?
 	for (i = 0; i<numLevels; i++) {
@@ -140,11 +145,14 @@ void create_tree(int32_t *keys, int n, char **level, int numLevels) {
 	}
 
 
-   
+
 
 	// allocate space for each level, store pointers in tree[]   
 	for (i = 0; i < numLevels; i++) {
-		arraySize = arraySize * strtol(level[i], &ptr, 10);
+		printf("");
+		arraySize = (strtol(level[i], &ptr, 10) - 1) * fanout;
+		fanout = fanout * (strtol(level[i], &ptr, 10));
+
 		sizes[i] = strtol(level[i], &ptr, 10) - 1;
 		maxSizes[i] = arraySize;
 	//	printf("%ld",strtol(level[i],&ptr,10));
@@ -152,15 +160,16 @@ void create_tree(int32_t *keys, int n, char **level, int numLevels) {
 		int32_t *l = malloc(sizeof(int32_t) * arraySize);
 		tree[i] = l;
 		printf("Address of level %d is %p\n", i, tree[i]);
+		printf("Size at level %d is %d\n", i, sizes[i]);
+
 	}
 
 	// Now need to fill in array!
 	// n = number of keys
-	for (i = 0; i < numLevels; i++) {
+	for (i = 0; i < n; i++) {
 		// figure out which level 
-		printf("Index is %d\n", index[i]);
-		printf("Level is %d\n", tlevel);
-		printf("%p\n",tree[tlevel]+(i*sizeof(int32_t *)));
+		printf("Index is %d at level %d\n", index[tlevel], tlevel);
+		printf("%p\n",tree[tlevel]+i);
 		if (index[tlevel] > maxSizes[tlevel]) {
 			// have too many keys
 			error = 1;
@@ -168,45 +177,82 @@ void create_tree(int32_t *keys, int n, char **level, int numLevels) {
 		}
 
 		// index[tlevel] is the offset for that array
-		*(tree[tlevel]+(index[tlevel]*sizeof(int32_t *))) = *(keys + (i*sizeof(int32_t *)));
+		*(tree[tlevel]+index[tlevel]) = *(keys + i);
+		printf("loading %d into the tree\n", *(tree[tlevel]+index[tlevel]));
 		index[tlevel]++;
+		
+
+
+		// TODO: how to know when to change levels?
+
+
+		// if not at leaf level, drop back down
 		if (tlevel != (numLevels-1)) {
 			tlevel = numLevels - 1;
 		}
 		//todo  greater than length
+		// deal with case if sizes[tlevel] is 1
 		else {
-			while (index[tlevel] % sizes[tlevel] == 0) {
+			if (sizes[tlevel] == 1) {
 				tlevel--;
-				if (tlevel < 0) {
-					tlevel = numLevels - 1;
-					break;
+			}
+			else {
+				int k = sizes[tlevel];
+				int tl = tlevel;
+				while (index[tlevel] % k == 0) {// && index[tlevel] % (sizes[tlevel]*2) != 0 && index[tlevel] != 0) {
+					tl--;
+					if (tlevel < 0) {
+						tl = numLevels - 1;
+						break;
+					}
+					k = k * (strtol(level[tl], &ptr, 10));
+					if (tlevel < 0) {
+						tlevel = numLevels - 1;
+						break;
+					}
 				}
+				tlevel = tl;
 				
 			}
 		}
 	}
 
 	// print out tree
+	for (i = 0; i < numLevels; i++) {
+		printf("Level%d\n", i);
+		for (j = 0; j < index[i]; j++) {
+			printf("%d\t", *(tree[i]+j));
+		}
+		printf("\n\n\n");
+	}
 
 	
 }
 
 int main(int argc, char **argv)
 {
+	// arg0: a.out
+	// arg1: K
+	// arg2: P
+	// arg3-x: depth at root-leaves
 	rand32_t *gen = rand32_init(time(NULL));
 	size_t i, n = argc > 1 ? atoll(argv[1]) : 10;
+	size_t n2 = argc > 1 ? atoll(argv[2]) : 10;
+	// keys
 	int32_t *a = generate_sorted_unique(n, gen);
-	int32_t *p = generate(n, gen);
+	// probes
+	int32_t *p = generate(n2, gen);
 	free(gen);
 	for (i = 1 ; i < n ; ++i)
 		assert(a[i - 1] < a[i]);
 	ratio_per_bit(a, n);
 	for (i = 0 ; i < n ; ++i) {
-		;//printf("%d\n", a[i]);
+		printf("%d\n", a[i]);
 		//printf("%d\n", p[i]);
 	}
-	// make sure arc2 is > 1
-	create_tree(a, n, &argv[1], argc - 2);
+	// TODO: make sure arc2 is > 1
+	printf("n: %zu, argc-3: %d\n", n, argc-3);
+	create_tree(a, n, &argv[3], argc - 3);
 	free(a);
 	free(p);
 	return EXIT_SUCCESS;
