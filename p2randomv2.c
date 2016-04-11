@@ -324,6 +324,11 @@ int binary_search(int32_t *tree [], int fan [], int probe, int max){
 
 int main(int argc, char **argv)
 {
+	clock_t p1_begin, p1_end, p2_begin, p2_end, p3_begin, p3_end;
+
+// begin phase 1
+	p1_begin = clock();
+
 	// arg0: a.out
 	// arg1: K
 	// arg2: P
@@ -383,6 +388,9 @@ int main(int argc, char **argv)
 	//fill tree
 	create_tree(tree, index, a, n, &argv[3], level);
 
+// end phase 1, begin phase 2
+	p1_end = p2_begin = clock();
+
 	//print index
 	for(k = 0; k < level; k++) {
 		printf("%d\n",index[k]);
@@ -403,6 +411,10 @@ int main(int argc, char **argv)
 		}
 		printf("\n\n\n");
 	}
+
+// end phase 2, begin phase 3
+	p2_end = p3_begin = clock();
+
 	int *out = malloc(n2*sizeof(int));
 
 	printf("probes\n");
@@ -415,6 +427,17 @@ int main(int argc, char **argv)
 	for(k = 0; k < n2; k++) {
 		printf("%d\n", out[k]);
 	}
+
+// end phase 3
+	p3_end = clock();
+
+	printf("Phase 1: %f s\n",(double)(p1_end - p1_begin) / CLOCKS_PER_SEC);
+
+	printf("Phase 2: %f s\n",(double)(p2_end - p2_begin) / CLOCKS_PER_SEC);
+
+	printf("Phase 3: %f s\n",(double)(p3_end - p3_begin) / CLOCKS_PER_SEC);
+
+
 	free(a);
 	free(p);
 	free(index);
