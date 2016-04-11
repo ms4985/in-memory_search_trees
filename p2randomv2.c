@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
+#include <limits.h>
 
 typedef struct {
 	size_t index;
@@ -218,6 +219,23 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 			}
 		}
 	}
+	//check if leaf nodes are partially filled, pad with MAXINT if so
+	int m = numLevels-1;
+	while(m+1>0){
+		int mx = sizes[m];
+		int idx = index[m] % mx;
+		int k = m;
+		if(idx != 0) {
+			printf("need to fill with maxInt\n");
+			while(idx != mx) {
+				*(tree[m] + index[k]) = INT_MAX;
+				idx++;
+				k++;
+			}
+		}
+		m--;
+	}	
+
 	// print out tree
 	/*
 	for (i = 0; i < numLevels; i++) {
