@@ -147,9 +147,6 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 		index[i] = 0;
 	}
 
-
-
-
 	// allocate space for each level, store pointers in tree[]   
 	for (i = 0; i < numLevels; i++) {
 		printf("");
@@ -183,11 +180,8 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 		*(tree[tlevel]+index[tlevel]) = *(keys + i);
 	//	printf("loading %d into the tree\n", *(tree[tlevel]+index[tlevel]));
 		index[tlevel]++;
-		
-
 
 		// TODO: how to know when to change levels?
-
 
 		// if not at leaf level, drop back down
 		if (tlevel != (numLevels-1)) {
@@ -247,6 +241,21 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 	}
 	*/
 }
+int search(int probe, int idx) {
+
+	return 0;
+}
+
+int binary_search(int32_t *tree [], int fan [], int p, int max){
+
+	int i, idx;
+	int range = 0;
+
+	idx = (int)(fan[0]-1)/2;
+	search(p,idx);
+
+	return range;
+}
 
 int main(int argc, char **argv)
 {
@@ -269,8 +278,9 @@ int main(int argc, char **argv)
 	int level = argc-3;
 	int32_t *tree[level];
 	int *index = malloc(level*sizeof(int));
-	//int fan[level];
-	//int maxSize[level];
+	int fan[level];
+	int maxSize[level];
+	int maxKeys = 0;
 	int k, j;
 	int f = 1;
 	printf("keys\n");
@@ -284,7 +294,6 @@ int main(int argc, char **argv)
 	// TODO: make sure arc2 is > 1
 	printf("n: %zu, argc-3: %d\n", n, level);
 
-	/*
 	//fill array of fanouts
 	for(k = 0; k < level; k++) {
 		fan[k] = atoi(argv[3+k]);
@@ -293,13 +302,28 @@ int main(int argc, char **argv)
 	//fill array of max number of nodes at each level
 	for(k = 0; k < level; k++) {
 		maxSize[k] = f * (fan[k]-1);
-		printf("%d\n", maxSize[k]);
+		//printf("%d\n", maxSize[k]);
 		f = f * fan[k];
+		maxKeys = maxKeys + maxSize[k];
 	}
-	*/
+
+	if(n > maxKeys) {
+		fprintf(stderr, "ERROR: Too many keys!\n\n");
+		return EXIT_FAILURE;
+	}
 
 	//fill tree
 	create_tree(tree, index, a, n, &argv[3], level);
+
+	//print index
+	for(k = 0; k < level; k++) {
+		printf("%d\n",index[k]);
+	}
+
+	if(index[0] == 0) {
+		fprintf(stderr, "ERROR: Not enough keys! Root is empty!\n\n");
+		return EXIT_FAILURE;
+	}
 
 	//print tree
 	for (k = 0; k < level; k++) {
@@ -311,8 +335,22 @@ int main(int argc, char **argv)
 		}
 		printf("\n\n\n");
 	}
+	int *out = malloc(n2*sizeof(int));
+
+	printf("probes\n");
+	for(k = 0; k < n2; k++) {
+		printf("%d\n", p[k]);
+		out[k] = binary_search(tree, fan, p[k], level);
+	}
+
+	printf("out\n");
+	for(k = 0; k < n2; k++) {
+		printf("%d\n", out[k]);
+	}
+
 	free(a);
 	free(p);
 	free(index);
+	free(out);
 	return EXIT_SUCCESS;
 }
