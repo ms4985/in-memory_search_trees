@@ -112,12 +112,6 @@ void ratio_per_bit(const int32_t *a, size_t n)
 }
 
 void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level, int numLevels) {
-	// TODO: error checking that level[i] is a long (strtol function)
-	// TODO: free extra space in array
-	// TODO: use memset or something more efficient to initialize index array
-	// TODO: free memory
-	// TODO: check for off by one errors, especially w/ fanout vs. capacity
-	// TODO: make sure strtol returns > 2
 
 	int error = 0;
 	
@@ -142,27 +136,19 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 	// tells the fanout at each level  - can use strtol(level[i]...) instead
 	//int fans[numLevels];
 
-	//printf("%d",numLevels);
-	// TODO: fix this?
 	for (i = 0; i<numLevels; i++) {
 		index[i] = 0;
 	}
 
 	// allocate space for each level, store pointers in tree[]   
 	for (i = 0; i < numLevels; i++) {
-	//	printf("");
 		arraySize = (strtol(level[i], &ptr, 10) - 1) * fanout;
 		fanout = fanout * (strtol(level[i], &ptr, 10));
 
 		sizes[i] = strtol(level[i], &ptr, 10) - 1;
 		maxSizes[i] = arraySize;
-	//	printf("%d\n", maxSizes[i]);
-	//	printf("%ld",strtol(level[i],&ptr,10));
-	//	printf("Array size at level %d is %ld\n", i, arraySize);
 		int32_t *l = malloc(sizeof(int32_t) * arraySize);
 		tree[i] = l;
-	//	printf("Address of level %d is %p\n", i, tree[i]);
-	//	printf("Size at level %d is %d\n", i, sizes[i]);
 
 	}
 
@@ -170,8 +156,6 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 	// n = number of keys
 	for (i = 0; i < n; i++) {
 		// figure out which level 
-	//	printf("Index is %d at level %d\n", index[tlevel], tlevel);
-	//	printf("%p\n",tree[tlevel]+i);
 	//	if (index[tlevel] > maxSizes[tlevel]) {
 			// have too many keys
 	//		error = 1;
@@ -182,8 +166,6 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 		*(tree[tlevel]+index[tlevel]) = *(keys + i);
 	//	printf("loading %d into the tree\n", *(tree[tlevel]+index[tlevel]));
 		index[tlevel]++;
-
-		// TODO: how to know when to change levels?
 
 		// if not at leaf level, drop back down
 		if (tlevel != (numLevels-1)) {
@@ -215,52 +197,17 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 			}
 		}
 	}
-		
-	//check if leaf nodes are partially filled, pad with MAXINT if so
-/*	int m = numLevels-1;
-	while(m+1>0){
-		int mx = sizes[m];
-		int idx = index[m] % mx;
-		int k = m;
-		if(idx != 0) {
-			printf("need to fill with maxInt\n");
-			while(idx != mx) {
-				*(tree[m] + index[k]) = INT_MAX;
-				idx++;
-				k++;
-			}
-		}
-		m--;
-	}	*/
-//	printf("%d\n", INT_MAX);
-		//*(tree[tlevel]+index[tlevel]) = *(keys + i);
-	//(index[tlevel] > maxSizes[tlevel]) 
-	//pad each array with MAX INT
+
+	//fill rest of array with max ints		
 	int lvl = numLevels - 1;
-/*	int idx;
-	lvl = 0;
-	while(lvl < numLevels) {
-		idx = index[lvl]; 
-		while(idx < maxSizes[lvl]+1) {
-			*(tree[lvl] + idx) = INT_MAX;
-			idx++;
-		}
-		lvl++;
-	}
-	*/
 	int idx;
 
 	while(lvl >= 0) {
-		// TODO check for off by 1
-	//	printf("level is %d\n",lvl);
 		idx = index[lvl];
 		while (idx < maxSizes[lvl]) {
-					//printf("adding 2 to tree, index is %d and maxSizes is %d\n",index[lvl], maxSizes[lvl]);
 			*(tree[lvl]+idx) = INT_MAX;
-	//		printf("%d\n", *(tree[lvl]+index[lvl]));
 			idx++;
 		}
-		//index[lvl]--;
 		lvl--;
 	}
 
@@ -269,7 +216,7 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 //return 0 for exact key or 0 for move left on node, 1 on move right
 int check_node(int key, int val) {
 
-	printf("\n%d vs\n%d\n", key, val);
+	//printf("\n%d vs\n%d\n", key, val);
 	
 	if(key <= val)
 		return 0;
@@ -295,21 +242,18 @@ int binary_search(int32_t *tree [], int fan [], int probe, int max){
 		right = 0;
 		left = 0;
 		while((idx >= 0) && (idx < (fan[lvl])-1)){ //while on same node
-			printf("\n%d   %d   %d\n", lvl, node, idx);
+			//printf("\n%d   %d   %d\n", lvl, node, idx);
 			out = check_node(probe, *(tree[lvl]+idx+node));//compare node
-			//printf("out:%d\n", out);
 			if(out == 0 && right == 0){ //move left but never moved right- go left
 				left = 1;
 				idx--;	
 			}
 			else if (out == 0 && right == 1){ //move left but moved right already- go down tree from cur idx
 				if(lvl == max-1) {
-					//set range
-					//printf("lvl: %d node: %d idx %d\n", lvl, node, idx);
 					range = idx+node;
 					return range;
 				}
-				node = idx*fan[lvl+1];
+				node = idx + ((node+1) * (fan[lvl+1]-1));
 				break;
 			}	
 			else if (out == 1 && left == 0){ //move right, but never moved left- go right
@@ -318,37 +262,26 @@ int binary_search(int32_t *tree [], int fan [], int probe, int max){
 			}
 			else if(out == 1 && left == 1){ //move right, but moved left already- go down tree from cur idx
 				if(lvl == max-1) {
-					//set range
-					//printf("lvl: %d node: %d idx %d\n", lvl, node, idx);
 					range = idx+node;
 					return range;
 				}
-				node = idx*fan[lvl+1];
+				node = idx + ((node+1) * (fan[lvl+1]-1));
 				break;
 			}	
 		}
-		//printf("idx after break: %d\n", idx);
 		if (idx < 0) { //move down left
-			//printf("lvl %d\n", lvl);
 			if(lvl == max-1) {
-				//set range
-				//printf("lvl: %d node: %d idx %d\n", lvl, node, idx);
 				range = idx+node+1;
 				return range;
 			}
-			//printf("move down left\n");
 			node = node*fan[lvl+1];
 		}
 		else if (idx >= fan[lvl]-1) { //move down right
-			//printf("lvl %d\n", lvl);
 			if(lvl == max-1) {
-				//set range
-				//printf("lvl: %d node: %d idx %d\n", lvl, node, idx);
 				range = idx+node-1;
 				return range;
 			}
-			//printf("move down right\n");
-			node = (idx*(fan[lvl+1]))-1;
+			node = ((fan[lvl]-1)*(fan[lvl+1]))-1;
 		}	
 		
 		lvl++;
@@ -404,19 +337,7 @@ int main(int argc, char **argv)
 	int maxKeys = 0;
 	int k, j;
 	int f = 1;
-	/*
-	printf("keys\n");
-	for (i = 0 ; i < n ; ++i) {
-		printf("%d\n", a[i]);
-	}
-	printf("probes\n");
-	for (i=0; i< n2; ++i) {
-		printf("%d\n", p[i]);
-	}
-	*/
 
-	// TODO: make sure arc2 is > 1
-	printf("n: %zu, argc-3: %d\n", n, level);
 
 	//fill array of fanouts
 	for(k = 0; k < level; k++) {
@@ -426,7 +347,6 @@ int main(int argc, char **argv)
 	//fill array of max number of nodes at each level
 	for(k = 0; k < level; k++) {
 		maxSize[k] = f * (fan[k]-1);
-		//printf("%d\n", maxSize[k]);
 		f = f * fan[k];
 		maxKeys = maxKeys + maxSize[k];
 	}
@@ -442,16 +362,11 @@ int main(int argc, char **argv)
 // end phase 1, begin phase 2
 	p1_end = p2_begin = clock();
 
-	//print index
-	for(k = 0; k < level; k++) {
-		printf("%d\n",index[k]);
-	}
-	
 	if(index[0] == 0) {
 		fprintf(stderr, "ERROR: Not enough keys! Root is empty!\n\n");
 		return EXIT_FAILURE;
 	}
-	
+/*	
 	//print tree
 	for (k = 0; k < level; k++) {
 		printf("Level%d\n", k);
@@ -462,22 +377,17 @@ int main(int argc, char **argv)
 		}
 		printf("\n\n\n");
 	}
-
+*/
 // end phase 2, begin phase 3
 	p2_end = p3_begin = clock();
 
 	int *out = malloc(n2*sizeof(int));
 
-	printf("probes\n");
 	for(k = 0; k < n2; k++) {
-		printf("%d\n", p[k]);
 		out[k] = binary_search(tree, fan, p[k], level);
+		printf("%d\t%d\n", p[k], out[k]);
 	}
 
-	printf("out\n");
-	for(k = 0; k < n2; k++) {
-		printf("%d\n", out[k]);
-	}
 
 // end phase 3
 	p3_end = clock();
@@ -488,9 +398,9 @@ int main(int argc, char **argv)
 
 	printf("Phase 3: %f s\n",(double)(p3_end - p3_begin) / CLOCKS_PER_SEC);
 
-for (i = 0; i<sizeof(tree)/sizeof(tree[0]); i++) {
-			free(tree[i]);
-				}
+	for (i = 0; i<sizeof(tree)/sizeof(tree[0]); i++) {
+		free(tree[i]);
+	}
 	free(a);
 	free(p);
 	free(index);
