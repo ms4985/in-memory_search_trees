@@ -123,6 +123,7 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 	long fanout = 1;
 	long arraySize = 1;
 	char *ptr;
+	size_t alignment = 16;
 
 	// index used to keep track of how to fill up structure
 	//int index[numLevels];
@@ -147,7 +148,9 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 
 		sizes[i] = strtol(level[i], &ptr, 10) - 1;
 		maxSizes[i] = arraySize;
-		int32_t *l = malloc(sizeof(int32_t) * arraySize);
+		//int32_t *l = malloc(sizeof(int32_t) * arraySize);
+		void *l;
+		posix_memalign(&l, alignment, sizeof(int32_t)*arraySize);
 		tree[i] = l;
 
 	}
@@ -366,7 +369,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "ERROR: Not enough keys! Root is empty!\n\n");
 		return EXIT_FAILURE;
 	}
-/*	
+	
 	//print tree
 	for (k = 0; k < level; k++) {
 		printf("Level%d\n", k);
@@ -377,7 +380,7 @@ int main(int argc, char **argv)
 		}
 		printf("\n\n\n");
 	}
-*/
+
 
 	int *out = malloc(n2*sizeof(int));
 
