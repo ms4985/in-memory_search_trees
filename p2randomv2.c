@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <string.h>
 #include <limits.h>
+#include <time.h>
 
 typedef struct {
 	size_t index;
@@ -149,12 +150,13 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 
 	// allocate space for each level, store pointers in tree[]   
 	for (i = 0; i < numLevels; i++) {
-		printf("");
+	//	printf("");
 		arraySize = (strtol(level[i], &ptr, 10) - 1) * fanout;
 		fanout = fanout * (strtol(level[i], &ptr, 10));
 
 		sizes[i] = strtol(level[i], &ptr, 10) - 1;
 		maxSizes[i] = arraySize;
+	//	printf("%d\n", maxSizes[i]);
 	//	printf("%ld",strtol(level[i],&ptr,10));
 	//	printf("Array size at level %d is %ld\n", i, arraySize);
 		int32_t *l = malloc(sizeof(int32_t) * arraySize);
@@ -170,11 +172,11 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 		// figure out which level 
 	//	printf("Index is %d at level %d\n", index[tlevel], tlevel);
 	//	printf("%p\n",tree[tlevel]+i);
-		if (index[tlevel] > maxSizes[tlevel]) {
+	//	if (index[tlevel] > maxSizes[tlevel]) {
 			// have too many keys
-			error = 1;
-			break;
-		}
+	//		error = 1;
+	//		break;
+	//	}
 
 		// index[tlevel] is the offset for that array
 		*(tree[tlevel]+index[tlevel]) = *(keys + i);
@@ -213,9 +215,9 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 			}
 		}
 	}
-	/*	
+		
 	//check if leaf nodes are partially filled, pad with MAXINT if so
-	int m = numLevels-1;
+/*	int m = numLevels-1;
 	while(m+1>0){
 		int mx = sizes[m];
 		int idx = index[m] % mx;
@@ -229,11 +231,13 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 			}
 		}
 		m--;
-	}	
-	
-		
+	}	*/
+//	printf("%d\n", INT_MAX);
+		//*(tree[tlevel]+index[tlevel]) = *(keys + i);
+	//(index[tlevel] > maxSizes[tlevel]) 
 	//pad each array with MAX INT
-	int lvl, idx;
+	int lvl = numLevels - 1;
+/*	int idx;
 	lvl = 0;
 	while(lvl < numLevels) {
 		idx = index[lvl]; 
@@ -244,6 +248,37 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 		lvl++;
 	}
 	*/
+
+	while(lvl >= 0) {
+		// TODO check for off by 1
+	//	printf("level is %d\n",lvl);
+		while ((index[lvl]) < maxSizes[lvl]) {
+					//printf("adding 2 to tree, index is %d and maxSizes is %d\n",index[lvl], maxSizes[lvl]);
+			*(tree[lvl]+index[lvl]) = INT_MAX;
+	//		printf("%d\n", *(tree[lvl]+index[lvl]));
+			index[lvl]++;
+		}
+		index[lvl]--;
+		lvl--;
+	}
+
+
+//print tree
+/*	int k=0;
+	for (k = 0; k < numLevels; k++) {
+		printf("Level %d, index is %d\n", k, index[k]);
+		for( j = 0; j <= index[k]; j++) {
+		//	if(*(tree[k]+j)){
+				printf("%15d", *(tree[k]+j));
+				//printf("\t");
+				//fflush(stdout);//printf(" \t");
+		//	}
+		}
+		printf("\n\n\n");
+	}
+
+*/
+
 }
 //return 0 for exact key or 0 for move left on node, 1 on move right
 int check_node(int key, int val) {
