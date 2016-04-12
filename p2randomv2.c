@@ -273,7 +273,7 @@ int binary_search(int32_t *tree [], int fan [], int probe, int max){
 		left = 0;
 		while((idx >= 0) && (idx < (fan[lvl])-1)){ //while on same node
 			out = check_node(probe, *(tree[lvl]+idx+node));//compare node
-			printf("%d   %d   %d\n", lvl, node, idx);
+			//printf("%d   %d   %d\n", lvl, node, idx);
 			//printf("out:%d\n", out);
 			if(out == 0 && right == 0){ //move left but never moved right- go left
 				left = 1;
@@ -325,7 +325,7 @@ int binary_search(int32_t *tree [], int fan [], int probe, int max){
 				return range;
 			}
 			//printf("move down right\n");
-			node = idx*(fan[lvl+1]-1);
+			node = idx*(fan[lvl+1]);
 		}	
 		
 		lvl++;
