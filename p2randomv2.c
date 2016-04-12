@@ -371,6 +371,22 @@ int binary_search(int32_t *tree [], int fan [], int probe, int max){
 
 int main(int argc, char **argv)
 {
+	if (argc < 4) {
+		printf("Usage: ./build K P N0 ... Ni\n");
+		return 0;
+	}
+
+	int i = 0;
+	char *ptr;
+	// ignore argv[0] which is ./build
+	for (i = 1; i<argc; i++) {
+		if (strtol(argv[i], &ptr, 10) == 0 || strtol(argv[i], &ptr, 10) == 1) {
+			printf("Inputs must be integers greater than 1\n");
+			return 0;
+		}
+
+	}
+
 	clock_t p1_begin, p1_end, p2_begin, p2_end, p3_begin, p3_end;
 
 // begin phase 1
@@ -381,7 +397,7 @@ int main(int argc, char **argv)
 	// arg2: P
 	// arg3-x: depth at root-leaves
 	rand32_t *gen = rand32_init(time(NULL));
-	size_t i, n = argc > 1 ? atoll(argv[1]) : 10;
+	size_t n = argc > 1 ? atoll(argv[1]) : 10;
 	size_t n2 = argc > 1 ? atoll(argv[2]) : 10;
 	// keys
 	int32_t *a = generate_sorted_unique(n, gen);
