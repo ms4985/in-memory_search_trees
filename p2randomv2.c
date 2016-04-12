@@ -378,16 +378,19 @@ int main(int argc, char **argv)
 		printf("\n\n\n");
 	}
 */
-// end phase 2, begin phase 3
-	p2_end = p3_begin = clock();
 
 	int *out = malloc(n2*sizeof(int));
 
 	for(k = 0; k < n2; k++) {
 		out[k] = binary_search(tree, fan, p[k], level);
-		printf("%d\t%d\n", p[k], out[k]);
 	}
 
+// end phase 2, begin phase 3
+	p2_end = p3_begin = clock();
+
+	for(k = 0; k < n2; k++) {
+		printf("%d\t%d\n", p[k], out[k]);
+	}
 
 // end phase 3
 	p3_end = clock();
