@@ -248,40 +248,28 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 		lvl++;
 	}
 	*/
+	int idx;
 
 	while(lvl >= 0) {
 		// TODO check for off by 1
 	//	printf("level is %d\n",lvl);
-		while ((index[lvl]) < maxSizes[lvl]) {
+		idx = index[lvl];
+		while (idx < maxSizes[lvl]) {
 					//printf("adding 2 to tree, index is %d and maxSizes is %d\n",index[lvl], maxSizes[lvl]);
-			*(tree[lvl]+index[lvl]) = INT_MAX;
+			*(tree[lvl]+idx) = INT_MAX;
 	//		printf("%d\n", *(tree[lvl]+index[lvl]));
-			index[lvl]++;
+			idx++;
 		}
-		index[lvl]--;
+		//index[lvl]--;
 		lvl--;
 	}
 
 
-//print tree
-/*	int k=0;
-	for (k = 0; k < numLevels; k++) {
-		printf("Level %d, index is %d\n", k, index[k]);
-		for( j = 0; j <= index[k]; j++) {
-		//	if(*(tree[k]+j)){
-				printf("%15d", *(tree[k]+j));
-				//printf("\t");
-				//fflush(stdout);//printf(" \t");
-		//	}
-		}
-		printf("\n\n\n");
-	}
-
-*/
-
 }
 //return 0 for exact key or 0 for move left on node, 1 on move right
 int check_node(int key, int val) {
+
+	printf("\n%d vs\n%d\n", key, val);
 	
 	if(key <= val)
 		return 0;
@@ -307,8 +295,8 @@ int binary_search(int32_t *tree [], int fan [], int probe, int max){
 		right = 0;
 		left = 0;
 		while((idx >= 0) && (idx < (fan[lvl])-1)){ //while on same node
+			printf("\n%d   %d   %d\n", lvl, node, idx);
 			out = check_node(probe, *(tree[lvl]+idx+node));//compare node
-			//printf("%d   %d   %d\n", lvl, node, idx);
 			//printf("out:%d\n", out);
 			if(out == 0 && right == 0){ //move left but never moved right- go left
 				left = 1;
@@ -349,9 +337,9 @@ int binary_search(int32_t *tree [], int fan [], int probe, int max){
 				return range;
 			}
 			//printf("move down left\n");
-			node = 0;
+			node = node*fan[lvl+1];
 		}
-		else 				{ //move down right
+		else if (idx >= fan[lvl]-1) { //move down right
 			//printf("lvl %d\n", lvl);
 			if(lvl == max-1) {
 				//set range
@@ -360,7 +348,7 @@ int binary_search(int32_t *tree [], int fan [], int probe, int max){
 				return range;
 			}
 			//printf("move down right\n");
-			node = idx*(fan[lvl+1]);
+			node = (idx*(fan[lvl+1]))-1;
 		}	
 		
 		lvl++;
@@ -438,12 +426,10 @@ int main(int argc, char **argv)
 // end phase 1, begin phase 2
 	p1_end = p2_begin = clock();
 
-	/*
 	//print index
 	for(k = 0; k < level; k++) {
 		printf("%d\n",index[k]);
 	}
-	*/
 	
 	if(index[0] == 0) {
 		fprintf(stderr, "ERROR: Not enough keys! Root is empty!\n\n");
