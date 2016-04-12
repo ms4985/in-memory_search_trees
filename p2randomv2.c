@@ -502,7 +502,9 @@ int main(int argc, char **argv)
 
 	printf("Phase 3: %f s\n",(double)(p3_end - p3_begin) / CLOCKS_PER_SEC);
 
-
+for (i = 0; i<sizeof(tree)/sizeof(tree[0]); i++) {
+			free(tree[i]);
+				}
 	free(a);
 	free(p);
 	free(index);
