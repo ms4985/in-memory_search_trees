@@ -213,6 +213,7 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 			}
 		}
 	}
+	/*	
 	//check if leaf nodes are partially filled, pad with MAXINT if so
 	int m = numLevels-1;
 	while(m+1>0){
@@ -229,26 +230,28 @@ void create_tree(int32_t *tree[], int *index, int32_t *keys, int n, char **level
 		}
 		m--;
 	}	
-
-	// print out tree
-	/*
-	for (i = 0; i < numLevels; i++) {
-		printf("Level%d\n", i);
-		for (j = 0; j < index[i]; j++) {
-			printf("%d\t", *(tree[i]+j));
+	
+		
+	//pad each array with MAX INT
+	int lvl, idx;
+	lvl = 0;
+	while(lvl < numLevels) {
+		idx = index[lvl]; 
+		while(idx < maxSizes[lvl]+1) {
+			*(tree[lvl] + idx) = INT_MAX;
+			idx++;
 		}
-		printf("\n\n\n");
+		lvl++;
 	}
 	*/
 }
-//return 0 for exact key, 1 for move left on node, 2 on move right
+//return 0 for exact key or 0 for move left on node, 1 on move right
 int check_node(int key, int val) {
 	
-	if(key < val)
+	if(key <= val)
+		return 0;
+	else 
 		return 1;
-	else if (key > val)
-		return 2;
-	return 0;
 }
 
 int binary_search(int32_t *tree [], int fan [], int probe, int max){
@@ -262,57 +265,66 @@ int binary_search(int32_t *tree [], int fan [], int probe, int max){
 
 	//iterate through each level of tree, searching for range
 	while(lvl < max){
-		idx = (int)((fan[lvl]-1)/2); //initial pt of search, fanout tells # of slots per node
+		idx = (int)(((fan[lvl]-1)/2)-1); //initial pt of search, fanout tells # of slots per node
+		if(idx<0) {
+			idx = 0;
+		}
 		right = 0;
 		left = 0;
 		while((idx >= 0) && (idx < (fan[lvl])-1)){ //while on same node
 			out = check_node(probe, *(tree[lvl]+idx+node));//compare node
-			printf("%d   %d   %d\n", lvl, node, idx);
-			printf("out:%d\n", out);
-			if(out == 0) { 		//found key
-				//set range
-				return range;
-			}
-			else if(out == 1 && right == 0){ //move left but never moved right- go left
+			//printf("%d   %d   %d\n", lvl, node, idx);
+			//printf("out:%d\n", out);
+			if(out == 0 && right == 0){ //move left but never moved right- go left
 				left = 1;
 				idx--;	
 			}
-			else if (out == 1 && right == 1){ //move left but moved right already- go down tree from cur idx
+			else if (out == 0 && right == 1){ //move left but moved right already- go down tree from cur idx
 				if(lvl == max-1) {
 					//set range
+					//printf("lvl: %d node: %d idx %d\n", lvl, node, idx);
+					range = idx+node;
 					return range;
 				}
 				node = idx*fan[lvl+1];
 				break;
 			}	
-			else if (out == 2 && left == 0){ //move right, but never moved left- go right
+			else if (out == 1 && left == 0){ //move right, but never moved left- go right
 				right = 1;
 				idx++;
 			}
-			else if(out == 2 && left == 1){ //move right, but moved left already- go down tree from cur idx
+			else if(out == 1 && left == 1){ //move right, but moved left already- go down tree from cur idx
 				if(lvl == max-1) {
 					//set range
+					//printf("lvl: %d node: %d idx %d\n", lvl, node, idx);
+					range = idx+node;
 					return range;
 				}
 				node = idx*fan[lvl+1];
 				break;
 			}	
 		}
+		//printf("idx after break: %d\n", idx);
 		if (idx < 0) { //move down left
+			//printf("lvl %d\n", lvl);
 			if(lvl == max-1) {
 				//set range
+				//printf("lvl: %d node: %d idx %d\n", lvl, node, idx);
+				range = idx+node+1;
 				return range;
 			}
-			printf("move down left\n");
+			//printf("move down left\n");
 			node = 0;
 		}
-		else if (idx > fan[lvl]) { //move down right
+		else 				{ //move down right
+			//printf("lvl %d\n", lvl);
 			if(lvl == max-1) {
 				//set range
+				//printf("lvl: %d node: %d idx %d\n", lvl, node, idx);
+				range = idx+node-1;
 				return range;
 			}
-			printf("move down right");
-			printf("%d\n", idx);
+			//printf("move down right\n");
 			node = idx*(fan[lvl+1]-1);
 		}	
 		
@@ -391,10 +403,12 @@ int main(int argc, char **argv)
 // end phase 1, begin phase 2
 	p1_end = p2_begin = clock();
 
+	/*
 	//print index
 	for(k = 0; k < level; k++) {
 		printf("%d\n",index[k]);
 	}
+	*/
 	
 	if(index[0] == 0) {
 		fprintf(stderr, "ERROR: Not enough keys! Root is empty!\n\n");
