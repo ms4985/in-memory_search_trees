@@ -128,8 +128,9 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			// access level 1 (non-root) of the index (5-way)
 			__m128i lvl_1 = _mm_load_si128(&index_L1[r_0 << 2]);
 			__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
-			__m128i cmp_1 = _mm_cmpgt_epi32(lvl_1, tmp);
-			__m128i r_1 = _mm_movemask_ps(cmp_1); // ps: epi32
+			__m128i cmp_1i = _mm_cmpgt_epi32(lvl_1, tmp);
+			__m128 cmp_1 = _mm_castsi128_ps(cmp_1i);
+			int r_1 = _mm_movemask_ps(cmp_1); // ps: epi32
 			r_1 = _bit_scan_forward(r_1 ^ 0x1FF);
 			r_1 += (r_0 << 2) + r_0;
 		}
@@ -143,7 +144,7 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			__m128i cmp_2_B = _mm_cmpgt_epi32(lvl_2_B, tmp);
 			__m128i cmp_2 = _mm_packs_epi32(cmp_2_A, cmp_2_B);
 			cmp_2 = _mm_packs_epi16(cmp_2, _mm_setzero_si128());
-			__m128i r_2 = _mm_movemask_epi8(cmp_2);
+			int r_2 = _mm_movemask_epi8(cmp_2);
 			r_2 = _bit_scan_forward(r_2 ^ 0x1FFFF);
 			r_2 += (r_1 << 3) + r_1;
 		}
@@ -166,8 +167,8 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			__m128i cmp_I_to_P = _mm_packs_epi32(cmp_IJKL, cmp_MNOP);
 			__m128i cmp_A_to_P = _mm_packs_epi16(cmp_A_to_H, cmp_I_to_P);
 			// extract the mask the least significant bit
-			__m128i mask = _mm_movemask_epi8(cmp_A_to_P);
-			__m128i res = _bit_scan_forward(mask | 0x10000); // asm: bsf
+			int mask = _mm_movemask_epi8(cmp_A_to_P);
+			int res = _bit_scan_forward(mask | 0x10000); // asm: bsf
 		}
 		else {
 			printf("Please check node capacity - trying with %d\n", tree->node_capacity[level]);
