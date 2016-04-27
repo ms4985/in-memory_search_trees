@@ -119,10 +119,9 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 
 	/* ROOT */
 	//
-
+	int res = 0;
 	for (size_t level = 0; level < tree->num_levels; ++level) {
-		size_t offset = res * tree->node_capacity[level];
-
+	//	size_t offset = res * tree->node_capacity[level];
 		if (tree->node_capacity[level] == 5) {
 			/* 5-way */
 			// access level 1 (non-root) of the index (5-way)
@@ -168,12 +167,13 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			__m128i cmp_A_to_P = _mm_packs_epi16(cmp_A_to_H, cmp_I_to_P);
 			// extract the mask the least significant bit
 			int mask = _mm_movemask_epi8(cmp_A_to_P);
-			int res = _bit_scan_forward(mask | 0x10000); // asm: bsf
+			int res17 = _bit_scan_forward(mask | 0x10000); // asm: bsf
 		}
 		else {
-			printf("Please check node capacity - trying with %d\n", tree->node_capacity[level]);
+			printf("Please check node capacity - trying with %zu\n", tree->node_capacity[level]);
 			return -1;
 		}
+	}
 		return (uint32_t) res;//return (uint32_t) result
 	}
 
