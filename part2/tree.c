@@ -101,6 +101,8 @@ Tree* build_index(size_t num_levels, size_t fanout[], size_t num_keys, int32_t k
 
 uint32_t probe_index(Tree* tree, int32_t probe_key) {
 	/* previous implementation:*/
+
+	/* COMMENT THIS OUT BEFORE TIMING */
 	size_t result1 = 0;
 	for (size_t level = 0; level < tree->num_levels; ++level) {
 		size_t offset = result1 * tree->node_capacity[level];
@@ -141,22 +143,18 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 
 			
 			val = (int*)&key;
-			printf("mm load si: %d  \n", val[0]);
 			__m128i cmp_1i = _mm_cmpgt_epi32(lvl_1, key);
 			val = (int*) &cmp_1i;
-			printf("mm cmpgt: %d  \n", val[0]);
 			__m128 cmp_1 = _mm_castsi128_ps(cmp_1i);
-			r = _mm_movemask_ps(cmp_1); // ps: epi32
-			printf("r is %d first\n", r);
-			
+			r = _mm_movemask_ps(cmp_1); // ps: epi32			
 			
 			int t1 = _bit_scan_forward(r); // it seems that we don't need ^ 0x1FF
 			r =t1;
 			printf("t1 is %d\n",t1);
 			r += (rprev << 2) + rprev;
-		//	r += (rprev << 2) + t1;
 			rprev = r;
-			printf("r is %d\n", r);
+			printf("new r is %d\n", r);
+
 		}
 		else if (tree->node_capacity[level] == 8) {
 			/* 9-way */
@@ -178,23 +176,16 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 
 			__m128i cmp_2_A = _mm_cmpgt_epi32(lvl_2_A, key);
 			val = (int*) &cmp_2_A;
-			printf("cmp_2_A: %d  \n", val[0]);
 			__m128i cmp_2_B = _mm_cmpgt_epi32(lvl_2_B, key);
 			val = (int*) &cmp_2_B;
-			printf("cmp_2_B: %d  \n", val[0]);
 			__m128i cmp_2 = _mm_packs_epi32(cmp_2_A, cmp_2_B);
 			val = (int*) &cmp_2;
-			printf("cmp_2: %d  \n", val[0]);
 			cmp_2 = _mm_packs_epi16(cmp_2, _mm_setzero_si128());
 			val = (int*) &cmp_2;
-			printf("cmp_2 again: %d  \n", val[0]);
 			r = _mm_movemask_epi8(cmp_2);
-			int t1 = _bit_scan_forward(r ^ 0x1FFFF);
-			int t2 = _bit_scan_forward(r);
-			printf("t1 is %d and t2 is %d\n", t1, t2);
 			r = _bit_scan_forward(r);
 			r += (rprev << 3) + rprev;
-			printf("r2 is %d\n", r);
+			printf("new r is %d\n", r);
 			rprev = r;
 		}
 		else if (tree->node_capacity[level] == 16) {
@@ -210,7 +201,7 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			//store 16 delimiters in 4 registers
 			int32_t *index_level = tree->key_array[level];
 			__m128i del_ABCD = _mm_load_si128((__m128i*)&index_level[r_3 << 4]);
-			__m128i del_EFGH = _mm_load_si128((__m128i*)&index_level[r_3 << 4]);
+			__m128i del_EFGH = _mm_load_si128((__m128i*)((&index_level[r_3 << 4])++);
 			__m128i del_IJKL = _mm_load_si128((__m128i*)&index_level[r_3 << 4]);
 			__m128i del_MNOP = _mm_load_si128((__m128i*)&index_level[r_3 << 4]);
 
@@ -227,14 +218,15 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			// extract the mask the least significant bit
 			int mask = _mm_movemask_epi8(cmp_A_to_P);
 			int res17 = _bit_scan_forward(mask | 0x10000); // asm: bsf
+			printf("res17 is %d\n", res17);
+			printf("bit scan forward mask is %d\n", _bit_scan_forward(mask));
 		}
 		else {
-			printf("Please check node capacity - trying with %zu\n", tree->node_capacity[level]);
+			printf("Please check node capacity - build with 5, 9 or 17");
 			return -1;
 		}
-		//rprev = rprev * tree->node_capacity[level];
 	}
-	return (uint32_t) r;//return (uint32_t) result
+	return (uint32_t) r;
 }
 
 void cleanup_index(Tree* tree) {
