@@ -135,7 +135,7 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			
 			int *val = (int*) &lvl_1;
 			printf("Numerical: %d %d %d %d \n", 
-			               val[0], val[1], val[2], val[3]); 
+				val[0], val[1], val[2], val[3]); 
 
 			__m128i key = _mm_loadl_epi64((__m128i*)&probe_key);
 			key = _mm_shuffle_epi32(key, 0);
@@ -203,6 +203,16 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			__m128i del_EFGH = _mm_load_si128((__m128i*)&index_level[(rprev << 4)+4]);
 			__m128i del_IJKL = _mm_load_si128((__m128i*)&index_level[(rprev << 4)+8]);
 			__m128i del_MNOP = _mm_load_si128((__m128i*)&index_level[(rprev << 4)+12]);
+
+			int *val = (int*) &del_ABCD;
+			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
+			val = (int*) &del_EFGHB;
+			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
+			val = (int*) &del_IJKL;
+			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
+			val = (int*) &del_MNOP;
+			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
+
 
 			// compare with 16 delimiters stored in 4 registers
 			//__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
