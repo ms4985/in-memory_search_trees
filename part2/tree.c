@@ -228,9 +228,12 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			__m128i cmp_A_to_P = _mm_packs_epi16(cmp_A_to_H, cmp_I_to_P);
 			// extract the mask the least significant bit
 			int mask = _mm_movemask_epi8(cmp_A_to_P);
-			int res17 = _bit_scan_forward(mask | 0x10000); // asm: bsf
-			printf("res17 is %d\n", res17);
+			r = _bit_scan_forward(mask | 0x10000); // asm: bsf
+			printf("r is %d\n", r);
 			printf("bit scan forward mask is %d\n", _bit_scan_forward(mask));
+			r += (rprev << 4) + rprev;
+			printf("new r is %d\n", r);
+			rprev = r;
 		}
 		else {
 			printf("Please check node capacity - build with 5, 9 or 17");
