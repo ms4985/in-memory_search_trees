@@ -151,6 +151,7 @@ printf("high is %zu and low is %zu\n",high, low);
 
 	for (size_t level = 1; level < tree->num_levels; ++level) {
 		//	size_t offset = res * tree->node_capacity[level];
+		printf("rprev is %d\n", rprev);
 		if (tree->node_capacity[level] == 4) {
 			/* 5-way */
 			// access level 1 (non-root) of the index (5-way)
@@ -187,14 +188,12 @@ printf("high is %zu and low is %zu\n",high, low);
 
 			int t1 = _bit_scan_forward(r);// ^ 0x1FF);
 			int t2 = _bit_scan_forward(r ^ 0x1FF);
-			r =t2;
+			r =t1;
 			printf("t1 is %d and t2 is %d\n", t1,t2);
 			//r_1 = _BitScanForward(r_1 ^ 0x1FF);
-			total = (total << 2)+r;
 			r += (rprev << 2) + rprev;
 			rprev = r;
-			printf("r is %d\n", r);
-			printf("total is %d\n", total);
+			printf("r is %d and rprev is %d\n", r, rprev);
 		}
 		else if (tree->node_capacity[level] == 8) {
 			/* 9-way */
@@ -257,7 +256,7 @@ printf("high is %zu and low is %zu\n",high, low);
 			printf("Please check node capacity - trying with %zu\n", tree->node_capacity[level]);
 			return -1;
 		}
-		rprev = rprev * tree->node_capacity[level];
+		//rprev = rprev * tree->node_capacity[level];
 	}
 	return (uint32_t) r;//return (uint32_t) result
 }
