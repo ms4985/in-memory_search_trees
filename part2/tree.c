@@ -150,9 +150,9 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 
 	int rprev = 0;
 	int r = 0;
-
+int r_3 = 0;
 	for (size_t level = 0; level < tree->num_levels; ++level) {
-		printf("rprev is %d at level %d\n", rprev, level);
+		printf("rprev is %d at level %zu\n", rprev, level);
 		if (tree->node_capacity[level] == 4) {
 			/* 5-way */
 			// access level 1 (non-root) of the index (5-way)
