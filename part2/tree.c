@@ -195,7 +195,9 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			// from piazza:
 			//__m128i key = _mm_cvtsi32_si128(input_keys[i++]);
 			__m128i key = _mm_cvtsi32_si128(probe_key);
-			key = _mm_shuffle_epi32(key, _MM_SHUFFLE(0,0,0,0));
+			//key = _mm_shuffle_epi32(key, _MM_SHUFFLE(0,0,0,0));
+			key = _mm_shuffle_epi32(key, 0);
+
 
 			//store 16 delimiters in 4 registers
 			int32_t *index_level = tree->key_array[level];
@@ -206,7 +208,7 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 
 			int *val = (int*) &del_ABCD;
 			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
-			val = (int*) &del_EFGHB;
+			val = (int*) &del_EFGH;
 			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
 			val = (int*) &del_IJKL;
 			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
@@ -216,10 +218,10 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 
 			// compare with 16 delimiters stored in 4 registers
 			//__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
-			__m128i cmp_ABCD = _mm_cmpgt_epi32(key, del_ABCD);
-			__m128i cmp_EFGH = _mm_cmpgt_epi32(key, del_EFGH);
-			__m128i cmp_IJKL = _mm_cmpgt_epi32(key, del_IJKL);
-			__m128i cmp_MNOP = _mm_cmpgt_epi32(key, del_MNOP);
+			__m128i cmp_ABCD = _mm_cmpgt_epi32(del_ABCD, key);
+			__m128i cmp_EFGH = _mm_cmpgt_epi32(del_EFGH, key);
+			__m128i cmp_IJKL = _mm_cmpgt_epi32(del_IJKL, key);
+			__m128i cmp_MNOP = _mm_cmpgt_epi32(del_MNOP, key);
 			// pack results to 16-bytes in a single SIMD register
 			__m128i cmp_A_to_H = _mm_packs_epi32(cmp_ABCD, cmp_EFGH);
 			__m128i cmp_I_to_P = _mm_packs_epi32(cmp_IJKL, cmp_MNOP);
