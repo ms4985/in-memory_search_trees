@@ -150,7 +150,7 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 
 	int rprev = 0;
 	int r = 0;
-int r_3 = 0;
+	int r_3 = 0;
 	for (size_t level = 0; level < tree->num_levels; ++level) {
 		printf("rprev is %d at level %zu\n", rprev, level);
 		if (tree->node_capacity[level] == 4) {
@@ -161,7 +161,7 @@ int r_3 = 0;
 			
 			int *val = (int*) &lvl_1;
 			printf("Numerical: %d %d %d %d \n", 
-			               val[0], val[1], val[2], val[3]);//, val[4], val[5], 
+			               val[0], val[1], val[2], val[3]); 
 
 			__m128i key = _mm_loadl_epi64((__m128i*)&probe_key);
 			key = _mm_shuffle_epi32(key, 0);
@@ -190,6 +190,12 @@ int r_3 = 0;
 			__m128i lvl_2_A = _mm_load_si128((__m128i*)&index_L2[ r << 3]);
 			__m128i lvl_2_B = _mm_load_si128((__m128i*)&index_L2[(r << 3) + 4]);
 			
+
+			int *val = (int*) &lvl_1;
+			printf("Numerical: %d %d %d %d \n", 
+			               val[0], val[1], val[2], val[3]); 
+
+
 			__m128i key = _mm_loadl_epi64((__m128i*)&probe_key);
 			key = _mm_shuffle_epi32(key, 0);
 
