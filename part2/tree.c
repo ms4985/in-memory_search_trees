@@ -14,6 +14,8 @@
 #include <nmmintrin.h> //SSE4.2
 #include <ammintrin.h> //SSE4A
 #include <x86intrin.h>
+#include <immintrin.h>
+
 
 extern int posix_memalign(void** memptr, size_t alignment, size_t size);
 size_t alignment = 16;
@@ -120,30 +122,38 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 	/* ROOT */
 	//
 	int res = 0;
+	int r_0 = 0; //0 because we start at first item in index array and bitshift over after each load????
+	int r_1 = 0;
+	int r_2 = 0;
+	int r_3 = 0;
+
 	for (size_t level = 0; level < tree->num_levels; ++level) {
 	//	size_t offset = res * tree->node_capacity[level];
 		if (tree->node_capacity[level] == 5) {
 			/* 5-way */
 			// access level 1 (non-root) of the index (5-way)
-			__m128i lvl_1 = _mm_load_si128(&index_L1[r_0 << 2]);
+			int32_t *index_L1 = tree->key_array[1];
+			__m128i lvl_1 = _mm_load_si128((__m128i*)&index_L1[r_0 << 2]);
 			__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
 			__m128i cmp_1i = _mm_cmpgt_epi32(lvl_1, tmp);
 			__m128 cmp_1 = _mm_castsi128_ps(cmp_1i);
-			int r_1 = _mm_movemask_ps(cmp_1); // ps: epi32
+			r_1 = _mm_movemask_ps(cmp_1); // ps: epi32
 			r_1 = _bit_scan_forward(r_1 ^ 0x1FF);
+			//r_1 = _BitScanForward(r_1 ^ 0x1FF);
 			r_1 += (r_0 << 2) + r_0;
 		}
 		else if (tree->node_capacity[level] == 9) {
 			/* 9-way */
 			// access level 2 of the index (9-way)
-			__m128i lvl_2_A = _mm_load_si128(&index_L2[ r_1 << 3]);
-			__m128i lvl_2_B = _mm_load_si128(&index_L2[(r_1 << 3) + 4]);
+			int32_t *index_L2 = tree->key_array[2];
+			__m128i lvl_2_A = _mm_load_si128((__m128i*)&index_L2[ r_1 << 3]);
+			__m128i lvl_2_B = _mm_load_si128((__m128i*)&index_L2[(r_1 << 3) + 4]);
 			__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
 			__m128i cmp_2_A = _mm_cmpgt_epi32(lvl_2_A, tmp);
 			__m128i cmp_2_B = _mm_cmpgt_epi32(lvl_2_B, tmp);
 			__m128i cmp_2 = _mm_packs_epi32(cmp_2_A, cmp_2_B);
 			cmp_2 = _mm_packs_epi16(cmp_2, _mm_setzero_si128());
-			int r_2 = _mm_movemask_epi8(cmp_2);
+			r_2 = _mm_movemask_epi8(cmp_2);
 			r_2 = _bit_scan_forward(r_2 ^ 0x1FFFF);
 			r_2 += (r_1 << 3) + r_1;
 		}
@@ -153,14 +163,23 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			//__m128i key = _mm_loadl_epi32(input_keys++); // asm: movd
 			//key = _mm_shuffle_epi32(key, 0);
 			// from piazza:
-			key = _mm_cvtsi32_si128(input_keys[i++]);
+			//__m128i key = _mm_cvtsi32_si128(input_keys[i++]);
+			__m128i key = _mm_cvtsi32_si128(probe_key);
 			key = _mm_shuffle_epi32(key, _MM_SHUFFLE(0,0,0,0));
+
+			//store 16 delimiters in 4 registers
+			int32_t *index_level = tree->key_array[level];
+			__m128i del_ABCD = _mm_load_si128((__m128i*)&index_level[r_3 << 4]);
+			__m128i del_EFGH = _mm_load_si128((__m128i*)&index_level[r_3 << 4]);
+			__m128i del_IJKL = _mm_load_si128((__m128i*)&index_level[r_3 << 4]);
+			__m128i del_MNOP = _mm_load_si128((__m128i*)&index_level[r_3 << 4]);
+
 			// compare with 16 delimiters stored in 4 registers
-			__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
-			__m128i cmp_ABCD = _mm_cmpgt_epi32(tmp, del_ABCD);
-			__m128i cmp_EFGH = _mm_cmpgt_epi32(tmp, del_EFGH);
-			__m128i cmp_IJKL = _mm_cmpgt_epi32(tmp, del_IJKL);
-			__m128i cmp_MNOP = _mm_cmpgt_epi32(tmp, del_MNOP);
+			//__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
+			__m128i cmp_ABCD = _mm_cmpgt_epi32(key, del_ABCD);
+			__m128i cmp_EFGH = _mm_cmpgt_epi32(key, del_EFGH);
+			__m128i cmp_IJKL = _mm_cmpgt_epi32(key, del_IJKL);
+			__m128i cmp_MNOP = _mm_cmpgt_epi32(key, del_MNOP);
 			// pack results to 16-bytes in a single SIMD register
 			__m128i cmp_A_to_H = _mm_packs_epi32(cmp_ABCD, cmp_EFGH);
 			__m128i cmp_I_to_P = _mm_packs_epi32(cmp_IJKL, cmp_MNOP);
@@ -184,3 +203,5 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 		free(tree->key_array);
 		free(tree);
 	}
+
+
