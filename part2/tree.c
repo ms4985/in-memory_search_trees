@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <time.h>
+#include <sys/time.h>
+
 #include <xmmintrin.h> //SSE
 #include <emmintrin.h> //SSE2
 #include <pmmintrin.h> //SSE3
@@ -100,8 +103,21 @@ Tree* build_index(size_t num_levels, size_t fanout[], size_t num_keys, int32_t k
 }
 
 uint32_t probe_index(Tree* tree, int32_t probe_key) {
-	/* previous implementation:*/
 
+struct timeval start1, end1;
+long mtime, secs, usecs;    
+
+gettimeofday(&start1, NULL);
+
+
+
+
+
+/* previous implementation:*/
+clock_t start, end;
+
+start = clock();
+printf("start clock, original: %Lf\n", (long double)start);
 	/* COMMENT THIS OUT BEFORE TIMING */
 	size_t result1 = 0;
 	for (size_t level = 0; level < tree->num_levels; ++level) {
@@ -119,7 +135,19 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 		result1 = result1 * (tree->node_capacity[level] + 1) + k;
 	}
 	printf("Answer should be %zu\n",result1);
+end = clock();
+printf("end clock, original: %Lf\n", (long double)end);
+printf("time, original: %Lf\n", (long double)(end-start));
 
+gettimeofday(&end1, NULL);
+secs  = end1.tv_sec  - start1.tv_sec;
+usecs = end1.tv_usec - start1.tv_usec;
+mtime = ((secs) * 1000 + usecs/1000.0) + 0.5;
+printf("Elapsed time: %ld millisecs\n", mtime);
+
+
+start = clock();
+printf("start clock, new: %Lf", (long double)start);
 
 	printf("probe is %d\n",probe_key);
 
@@ -240,6 +268,9 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			return -1;
 		}
 	}
+end = clock();
+printf("end clock, new: %Lf", (long double)end);
+printf("time, new: %Lf", (long double)(end-start));
 	return (uint32_t) r;
 }
 
