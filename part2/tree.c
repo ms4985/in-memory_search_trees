@@ -119,34 +119,7 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 	printf("Answer should be %zu\n",result1);
 
 
-
-	/* ROOT */
-/*	printf("probe is %d\n",probe_key);
-	printf("root is %d %d %d %d\n",tree->key_array[0][0],tree->key_array[0][1],tree->key_array[0][2],tree->key_array[0][3]);
-	size_t low = 0;
-	size_t high = tree->node_capacity[0];
-	printf("high is %zu\n",high);
-	while (low != high) {
-		size_t mid = (low + high) / 2;
-		printf("key_array[0][mid] is %d when mid is %zu\n",tree->key_array[0][mid], mid);
-		if (tree->key_array[0][mid] < probe_key)
-			low = mid + 1;
-		else
-			high = mid;
-		printf("high is %zu and low is %zu\n",high, low);
-	}
-	size_t result = low;
-
-	printf("Root result is %zu\n", low);
-
-	//	int res = 0;
-	//	int r_0 = 0; //0 because we start at first item in index array and bitshift over after each load????
-	//	int r_1 = 0;
-	//	int r_2 = 0;
-	int r_3 = 0;
-
-	int rprev = result;
-	int r = 0;*/
+	printf("probe is %d\n",probe_key);
 
 	int rprev = 0;
 	int r = 0;
@@ -179,21 +152,24 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			
 			int t1 = _bit_scan_forward(r); // it seems that we don't need ^ 0x1FF
 			r =t1;
+			printf("t1 is %d\n",t1);
 			r += (rprev << 2) + rprev;
+		//	r += (rprev << 2) + t1;
 			rprev = r;
 			printf("r is %d\n", r);
 		}
 		else if (tree->node_capacity[level] == 8) {
 			/* 9-way */
 			// access level 2 of the index (9-way)
-			int32_t *index_L2 = tree->key_array[level] + rprev*tree->node_capacity[level];
+			int32_t *index_L2 = tree->key_array[level];
 			__m128i lvl_2_A = _mm_load_si128((__m128i*)&index_L2[ r << 3]);
 			__m128i lvl_2_B = _mm_load_si128((__m128i*)&index_L2[(r << 3) + 4]);
 			
 
-			int *val = (int*) &lvl_1;
-			printf("Numerical: %d %d %d %d \n", 
-			               val[0], val[1], val[2], val[3]); 
+			int *val = (int*) &lvl_2_A;
+			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
+			val = (int*) &lvl_2_B;
+			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
 
 
 			__m128i key = _mm_loadl_epi64((__m128i*)&probe_key);
@@ -201,7 +177,7 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 
 
 			__m128i cmp_2_A = _mm_cmpgt_epi32(lvl_2_A, key);
-			int *val = (int*) &cmp_2_A;
+			val = (int*) &cmp_2_A;
 			printf("cmp_2_A: %d  \n", val[0]);
 			__m128i cmp_2_B = _mm_cmpgt_epi32(lvl_2_B, key);
 			val = (int*) &cmp_2_B;
@@ -216,7 +192,7 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			int t1 = _bit_scan_forward(r ^ 0x1FFFF);
 			int t2 = _bit_scan_forward(r);
 			printf("t1 is %d and t2 is %d\n", t1, t2);
-			r = _bit_scan_forward(r ^ 0x1FFFF);
+			r = _bit_scan_forward(r);
 			r += (rprev << 3) + rprev;
 			printf("r2 is %d\n", r);
 			rprev = r;
