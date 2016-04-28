@@ -120,44 +120,63 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 
 
 	/* ROOT */
-	//
-	int res = 0;
-	int r_0 = 0; //0 because we start at first item in index array and bitshift over after each load????
-	int r_1 = 0;
-	int r_2 = 0;
+	   size_t low = 0;
+	   size_t high = tree->node_capacity[0];
+	   while (low != high) {
+	   size_t mid = (low + high) / 2;
+	   if (tree->key_array[0][mid] < probe_key)
+	   low = mid + 1;
+	   else
+	   high = mid;
+	   }
+	   size_t result = low;
+	
+	printf("Root result is %zu\n", low);
+
+//	int res = 0;
+//	int r_0 = 0; //0 because we start at first item in index array and bitshift over after each load????
+//	int r_1 = 0;
+//	int r_2 = 0;
 	int r_3 = 0;
+
+	int rprev = result;
+	int r = 0;
 
 	for (size_t level = 0; level < tree->num_levels; ++level) {
 	//	size_t offset = res * tree->node_capacity[level];
-		if (tree->node_capacity[level] == 5) {
+		if (tree->node_capacity[level] == 4) {
 			/* 5-way */
 			// access level 1 (non-root) of the index (5-way)
 			int32_t *index_L1 = tree->key_array[1];
-			__m128i lvl_1 = _mm_load_si128((__m128i*)&index_L1[r_0 << 2]);
+			__m128i lvl_1 = _mm_load_si128((__m128i*)&index_L1[rprev << 2]);
 			__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
 			__m128i cmp_1i = _mm_cmpgt_epi32(lvl_1, tmp);
 			__m128 cmp_1 = _mm_castsi128_ps(cmp_1i);
-			r_1 = _mm_movemask_ps(cmp_1); // ps: epi32
-			r_1 = _bit_scan_forward(r_1 ^ 0x1FF);
+			r = _mm_movemask_ps(cmp_1); // ps: epi32
+			r = _bit_scan_forward(r ^ 0x1FF);
 			//r_1 = _BitScanForward(r_1 ^ 0x1FF);
-			r_1 += (r_0 << 2) + r_0;
-		}
-		else if (tree->node_capacity[level] == 9) {
+			r += (rprev << 2) + rprev;
+			rprev = r;
+printf("r is %d", r);
+}
+		else if (tree->node_capacity[level] == 8) {
 			/* 9-way */
 			// access level 2 of the index (9-way)
 			int32_t *index_L2 = tree->key_array[2];
-			__m128i lvl_2_A = _mm_load_si128((__m128i*)&index_L2[ r_1 << 3]);
-			__m128i lvl_2_B = _mm_load_si128((__m128i*)&index_L2[(r_1 << 3) + 4]);
+			__m128i lvl_2_A = _mm_load_si128((__m128i*)&index_L2[ r << 3]);
+			__m128i lvl_2_B = _mm_load_si128((__m128i*)&index_L2[(r << 3) + 4]);
 			__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
 			__m128i cmp_2_A = _mm_cmpgt_epi32(lvl_2_A, tmp);
 			__m128i cmp_2_B = _mm_cmpgt_epi32(lvl_2_B, tmp);
 			__m128i cmp_2 = _mm_packs_epi32(cmp_2_A, cmp_2_B);
 			cmp_2 = _mm_packs_epi16(cmp_2, _mm_setzero_si128());
-			r_2 = _mm_movemask_epi8(cmp_2);
-			r_2 = _bit_scan_forward(r_2 ^ 0x1FFFF);
-			r_2 += (r_1 << 3) + r_1;
+			r = _mm_movemask_epi8(cmp_2);
+			r = _bit_scan_forward(r ^ 0x1FFFF);
+			r += (rprev << 3) + rprev;
+		printf("r2 is %d\n", r);
+		rprev = r;
 		}
-		else if (tree->node_capacity[level] == 17) {
+		else if (tree->node_capacity[level] == 16) {
 			/* 17-way */
 			// broadcast 1 32-bit key to all SIMD lanes
 			//__m128i key = _mm_loadl_epi32(input_keys++); // asm: movd
@@ -193,7 +212,7 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 			return -1;
 		}
 	}
-		return (uint32_t) res;//return (uint32_t) result
+		return (uint32_t) r;//return (uint32_t) result
 	}
 
 	void cleanup_index(Tree* tree) {
