@@ -87,12 +87,12 @@ Tree* build_index(size_t num_levels, size_t fanout[], size_t num_keys, int32_t k
 	}
 
 	// print the tree
-	// for (size_t i = 0; i < num_levels; ++i) {
-	//         printf("Level %zu:", i);
-	//         for (size_t j = 0; j < key_count[i]; ++j)
-	//                 printf(" %d", tree->key_array[i][j]);
-	//         printf("\n");
-	// }
+	 for (size_t i = 0; i < num_levels; ++i) {
+	         printf("Level %zu:", i);
+	         for (size_t j = 0; j < key_count[i]; ++j)
+	                 printf(" %d", tree->key_array[i][j]);
+	         printf("\n");
+	 }
 
 	free(array_capacity);
 	free(key_count);
@@ -100,69 +100,80 @@ Tree* build_index(size_t num_levels, size_t fanout[], size_t num_keys, int32_t k
 }
 
 uint32_t probe_index(Tree* tree, int32_t probe_key) {
-	/* previous implementation:
-	   size_t result = 0;
-	   for (size_t level = 0; level < tree->num_levels; ++level) {
-	   size_t offset = result * tree->node_capacity[level];
-	   size_t low = 0;
-	   size_t high = tree->node_capacity[level];
-	   while (low != high) {
-	   size_t mid = (low + high) / 2;
-	   if (tree->key_array[level][mid + offset] < probe_key)
-	   low = mid + 1;
-	   else
-	   high = mid;
-	   }
-	   size_t k = low;       // should go to child k
-	   result = result * (tree->node_capacity[level] + 1) + k;
-	   }
-	 */
+	/* previous implementation:*/
+	size_t result1 = 0;
+	for (size_t level = 0; level < tree->num_levels; ++level) {
+		size_t offset = result1 * tree->node_capacity[level];
+		size_t low = 0;
+		size_t high = tree->node_capacity[level];
+		while (low != high) {
+			size_t mid = (low + high) / 2;
+			if (tree->key_array[level][mid + offset] < probe_key)
+				low = mid + 1;
+			else
+				high = mid;
+		}
+		size_t k = low;       // should go to child k
+		result1 = result1 * (tree->node_capacity[level] + 1) + k;
+	}
+	printf("Answer should be %zu\n",result1);
+
 
 
 	/* ROOT */
-	   size_t low = 0;
-	   size_t high = tree->node_capacity[0];
-	   while (low != high) {
-	   size_t mid = (low + high) / 2;
-	   if (tree->key_array[0][mid] < probe_key)
-	   low = mid + 1;
-	   else
-	   high = mid;
-	   }
-	   size_t result = low;
-	
+	printf("probe is %d\n",probe_key);
+	printf("root is %d %d %d %d\n",tree->key_array[0][0],tree->key_array[0][1],tree->key_array[0][2],tree->key_array[0][3]);
+	size_t low = 0;
+	size_t high = tree->node_capacity[0];
+	printf("high is %zu\n",high);
+	while (low != high) {
+		size_t mid = (low + high) / 2;
+		printf("key_array[0][mid] is %d when mid is %zu\n",tree->key_array[0][mid], mid);
+		if (tree->key_array[0][mid] < probe_key)
+			low = mid + 1;
+		else
+			high = mid;
+printf("high is %zu and low is %zu\n",high, low);
+}
+	size_t result = low;
+
 	printf("Root result is %zu\n", low);
 
-//	int res = 0;
-//	int r_0 = 0; //0 because we start at first item in index array and bitshift over after each load????
-//	int r_1 = 0;
-//	int r_2 = 0;
+	//	int res = 0;
+	//	int r_0 = 0; //0 because we start at first item in index array and bitshift over after each load????
+	//	int r_1 = 0;
+	//	int r_2 = 0;
 	int r_3 = 0;
 
 	int rprev = result;
 	int r = 0;
+	int total = rprev;
 
-	for (size_t level = 0; level < tree->num_levels; ++level) {
-	//	size_t offset = res * tree->node_capacity[level];
+	for (size_t level = 1; level < tree->num_levels; ++level) {
+		//	size_t offset = res * tree->node_capacity[level];
 		if (tree->node_capacity[level] == 4) {
 			/* 5-way */
 			// access level 1 (non-root) of the index (5-way)
-			int32_t *index_L1 = tree->key_array[1];
-			__m128i lvl_1 = _mm_load_si128((__m128i*)&index_L1[rprev << 2]);
+			int32_t *index_L1 = tree->key_array[level] + rprev*tree->node_capacity[level];
+	printf("section is %d %d %d %d\n",index_L1[0],index_L1[1],index_L1[2],index_L1[3]);
+			__m128i lvl_1 = _mm_load_si128((__m128i*)&index_L1);//[rprev << 2]);
 			__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
 			__m128i cmp_1i = _mm_cmpgt_epi32(lvl_1, tmp);
 			__m128 cmp_1 = _mm_castsi128_ps(cmp_1i);
 			r = _mm_movemask_ps(cmp_1); // ps: epi32
 			r = _bit_scan_forward(r ^ 0x1FF);
+			printf("r1 is %d before bitshift\n", r);
 			//r_1 = _BitScanForward(r_1 ^ 0x1FF);
+			total = (total << 2)+r;
 			r += (rprev << 2) + rprev;
 			rprev = r;
-printf("r is %d", r);
-}
+			printf("r is %d\n", r);
+			printf("total is %d\n", total);
+		}
 		else if (tree->node_capacity[level] == 8) {
 			/* 9-way */
 			// access level 2 of the index (9-way)
-			int32_t *index_L2 = tree->key_array[2];
+			int32_t *index_L2 = tree->key_array[level] + rprev*tree->node_capacity[level];
 			__m128i lvl_2_A = _mm_load_si128((__m128i*)&index_L2[ r << 3]);
 			__m128i lvl_2_B = _mm_load_si128((__m128i*)&index_L2[(r << 3) + 4]);
 			__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
@@ -172,9 +183,10 @@ printf("r is %d", r);
 			cmp_2 = _mm_packs_epi16(cmp_2, _mm_setzero_si128());
 			r = _mm_movemask_epi8(cmp_2);
 			r = _bit_scan_forward(r ^ 0x1FFFF);
+			printf("r2 is %d before bitshift\n", r);
 			r += (rprev << 3) + rprev;
-		printf("r2 is %d\n", r);
-		rprev = r;
+			printf("r2 is %d\n", r);
+			rprev = r;
 		}
 		else if (tree->node_capacity[level] == 16) {
 			/* 17-way */
@@ -211,16 +223,17 @@ printf("r is %d", r);
 			printf("Please check node capacity - trying with %zu\n", tree->node_capacity[level]);
 			return -1;
 		}
+		rprev = rprev * tree->node_capacity[level];
 	}
-		return (uint32_t) r;//return (uint32_t) result
-	}
+	return (uint32_t) r;//return (uint32_t) result
+}
 
-	void cleanup_index(Tree* tree) {
-		free(tree->node_capacity);
-		for (size_t i = 0; i < tree->num_levels; ++i)
-			free(tree->key_array[i]);
-		free(tree->key_array);
-		free(tree);
-	}
+void cleanup_index(Tree* tree) {
+	free(tree->node_capacity);
+	for (size_t i = 0; i < tree->num_levels; ++i)
+		free(tree->key_array[i]);
+	free(tree->key_array);
+	free(tree);
+}
 
 
