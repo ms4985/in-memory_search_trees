@@ -154,15 +154,24 @@ printf("high is %zu and low is %zu\n",high, low);
 		if (tree->node_capacity[level] == 4) {
 			/* 5-way */
 			// access level 1 (non-root) of the index (5-way)
-			int32_t *index_L1 = tree->key_array[level] + rprev*tree->node_capacity[level];
-	printf("section is %d %d %d %d\n",index_L1[0],index_L1[1],index_L1[2],index_L1[3]);
-			__m128i lvl_1 = _mm_load_si128((__m128i*)&index_L1);//[rprev << 2]);
+			int32_t *index_L1 = tree->key_array[level];// + rprev*tree->node_capacity[level];
+			__m128i lvl_1 = _mm_load_si128((__m128i*)&index_L1[rprev << 2]);
+			
+			int *val = (int*) &lvl_1;
+			    printf("Numerical: %d %d %d %d \n", 
+			               val[0], val[1], val[2], val[3]);//, val[4], val[5], 
+
+
+
 			__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
 			__m128i cmp_1i = _mm_cmpgt_epi32(lvl_1, tmp);
 			__m128 cmp_1 = _mm_castsi128_ps(cmp_1i);
 			r = _mm_movemask_ps(cmp_1); // ps: epi32
-			r = _bit_scan_forward(r ^ 0x1FF);
-			printf("r1 is %d before bitshift\n", r);
+			printf("r is %d\n", r);
+			int t1 = _bit_scan_forward(r);// ^ 0x1FF);
+			int t2 = _bit_scan_forward(r ^ 0x1FF);
+			r =t2;
+			printf("t1 is %d and t2 is %d\n", t1,t2);
 			//r_1 = _BitScanForward(r_1 ^ 0x1FF);
 			total = (total << 2)+r;
 			r += (rprev << 2) + rprev;
