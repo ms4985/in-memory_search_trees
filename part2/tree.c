@@ -161,13 +161,30 @@ printf("high is %zu and low is %zu\n",high, low);
 			    printf("Numerical: %d %d %d %d \n", 
 			               val[0], val[1], val[2], val[3]);//, val[4], val[5], 
 
+			__m128i key = _mm_loadl_epi64((__m128i*)&probe_key);//input_keys++); // asm: movd
+			key = _mm_shuffle_epi32(key, 0);
 
-
-			__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
-			__m128i cmp_1i = _mm_cmpgt_epi32(lvl_1, tmp);
+			//__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
+			//val = (int*) &tmp;
+			  val = (int*)&key;
+			  printf("mm load si: %d  \n", val[0]);
+			__m128i cmp_1i = _mm_cmpgt_epi32(lvl_1, key);//tmp);
+			val = (int*) &cmp_1i;
+			    printf("mm cmpgt: %d  \n", val[0]);
 			__m128 cmp_1 = _mm_castsi128_ps(cmp_1i);
 			r = _mm_movemask_ps(cmp_1); // ps: epi32
-			printf("r is %d\n", r);
+			printf("r is %d first\n", r);
+			
+			//lvl_1 = 	
+		/*	cmp_1i = _mm_cmpgt_epi32(lvl_1++, tmp);
+			val = (int*) &cmp_1i;
+			    printf("mm cmpgt: %d  \n", val[0]);
+			__m128 cmp_1 = _mm_castsi128_ps(cmp_1i);
+			r = _mm_movemask_ps(cmp_1); // ps: epi32
+			printf("r is %d second\n", r);
+*/
+
+
 			int t1 = _bit_scan_forward(r);// ^ 0x1FF);
 			int t2 = _bit_scan_forward(r ^ 0x1FF);
 			r =t2;
@@ -187,9 +204,17 @@ printf("high is %zu and low is %zu\n",high, low);
 			__m128i lvl_2_B = _mm_load_si128((__m128i*)&index_L2[(r << 3) + 4]);
 			__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
 			__m128i cmp_2_A = _mm_cmpgt_epi32(lvl_2_A, tmp);
+			int *val = (int*) &cmp_2_A;
+			    printf("cmp_2_A: %d  \n", val[0]);
 			__m128i cmp_2_B = _mm_cmpgt_epi32(lvl_2_B, tmp);
+			val = (int*) &cmp_2_B;
+			    printf("cmp_2_B: %d  \n", val[0]);
 			__m128i cmp_2 = _mm_packs_epi32(cmp_2_A, cmp_2_B);
+			val = (int*) &cmp_2;
+			    printf("cmp_2: %d  \n", val[0]);
 			cmp_2 = _mm_packs_epi16(cmp_2, _mm_setzero_si128());
+			val = (int*) &cmp_2;
+			    printf("cmp_2 again: %d  \n", val[0]);
 			r = _mm_movemask_epi8(cmp_2);
 			r = _bit_scan_forward(r ^ 0x1FFFF);
 			printf("r2 is %d before bitshift\n", r);
