@@ -125,7 +125,6 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 
 	int rprev = 0;
 	int r = 0;
-	int r_3 = 0;
 	for (size_t level = 0; level < tree->num_levels; ++level) {
 		printf("rprev is %d at level %zu\n", rprev, level);
 		if (tree->node_capacity[level] == 4) {
@@ -200,10 +199,10 @@ uint32_t probe_index(Tree* tree, int32_t probe_key) {
 
 			//store 16 delimiters in 4 registers
 			int32_t *index_level = tree->key_array[level];
-			__m128i del_ABCD = _mm_load_si128((__m128i*)&index_level[r_3 << 4]);
-			__m128i del_EFGH = _mm_load_si128((__m128i*)((&index_level[r_3 << 4])++);
-			__m128i del_IJKL = _mm_load_si128((__m128i*)&index_level[r_3 << 4]);
-			__m128i del_MNOP = _mm_load_si128((__m128i*)&index_level[r_3 << 4]);
+			__m128i del_ABCD = _mm_load_si128((__m128i*)&index_level[rprev << 4]);
+			__m128i del_EFGH = _mm_load_si128((__m128i*)&index_level[(rprev << 4)+4]);
+			__m128i del_IJKL = _mm_load_si128((__m128i*)&index_level[(rprev << 4)+8]);
+			__m128i del_MNOP = _mm_load_si128((__m128i*)&index_level[(rprev << 4)+12]);
 
 			// compare with 16 delimiters stored in 4 registers
 			//__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
