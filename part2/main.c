@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include "p2random.h"
 #include "tree.h"
@@ -20,9 +21,10 @@ int main(int argc, char* argv[]) {
                 assert(fanout[i] >= 2 && fanout[i] <= 17);
         }
 
-	time_t p1_begin, p1_end, p2_begin, p2_end, p3_begin, p3_end;
+	struct timeval p1_begin, p1_end, p2_begin, p2_end, p3_begin, p3_end, p1res, p2res, p3res;
 
-        p1_begin = time(NULL);
+        //p1_begin = time(NULL);
+        gettimeofday(&p1_begin, NULL);
 
         // building the tree index
         rand32_t* gen = rand32_init((uint32_t) time(NULL));
@@ -44,29 +46,42 @@ int main(int argc, char* argv[]) {
         uint32_t* result = malloc(sizeof(uint32_t) * num_probes);
         assert(result != NULL);
 
-        p1_end = p2_begin = time(NULL);
+        //p1_end = p2_begin = time(NULL);
+        gettimeofday(&p1_end, NULL);
+        gettimeofday(&p2_begin, NULL);
 
         // perform index probing (Phase 2)
         for (size_t i = 0; i < num_probes; ++i) {
                 result[i] = probe_index(tree, probe[i]);
         }
 
-        p2_end = p3_begin = time(NULL);
+        //p2_end = p3_begin = time(NULL);
+        gettimeofday(&p2_end, NULL);
+        gettimeofday(&p3_begin, NULL);
 
         // output results
         for (size_t i = 0; i < num_probes; ++i) {
                 fprintf(stdout, "%d %u\n", probe[i], result[i]);
         }
 
-        p3_end = time(NULL);
+        //p3_end = time(NULL);
+        gettimeofday(&p3_end, NULL);
 
-        //printf("clocks per sec = %d\n", CLOCKS_PER_SEC);
+        timersub(&p1_end, &p1_begin, &p1res);
+        timersub(&p2_end, &p2_begin, &p2res);
+        timersub(&p3_end, &p3_begin, &p3res);
 
-        printf("Phase 1: %f s\n",(double)(difftime(p1_end, p1_begin))/10000); //*1000) / CLOCKS_PER_SEC);
+        /*
+        printf("Phase 1: %f s\n",(double)(difftime(p1_end, p1_begin))/10000); 
 
-        printf("Phase 2: %f s\n",(double)(difftime(p2_end, p2_begin))); //*1000) / CLOCKS_PER_SEC);
+        printf("Phase 2: %f s\n",(double)(difftime(p2_end, p2_begin))); 
 
-        printf("Phase 3: %f s\n",(double)(difftime(p3_end, p3_begin))); //*1000) / CLOCKS_PER_SEC);
+        printf("Phase 3: %f s\n",(double)(difftime(p3_end, p3_begin))); 
+        */
+
+        printf("Time elapsed for P1: %ld.%06ld\n", (long int)p1res.tv_sec, (long int)p1res.tv_usec);
+        printf("Time elapsed for P2: %ld.%06ld\n", (long int)p2res.tv_sec, (long int)p2res.tv_usec);
+        printf("Time elapsed for P3: %ld.%06ld\n", (long int)p3res.tv_sec, (long int)p3res.tv_usec);
 
         // cleanup and exit
         free(result);
