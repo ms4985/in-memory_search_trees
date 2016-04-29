@@ -60,11 +60,13 @@ int main(int argc, char* argv[]) {
 
         p3_end = clock();
 
-        printf("Phase 1: %f s\n",(double)(p1_end - p1_begin) / CLOCKS_PER_SEC);
+        printf("clocks per sec = %d\n", CLOCKS_PER_SEC);
 
-        printf("Phase 2: %f s\n",(double)(p2_end - p2_begin) / CLOCKS_PER_SEC);
+        printf("Phase 1: %f s\n",(double)((p1_end - p1_begin)*1000) / CLOCKS_PER_SEC);
 
-        printf("Phase 3: %f s\n",(double)(p3_end - p3_begin) / CLOCKS_PER_SEC);
+        printf("Phase 2: %f s\n",(double)((p2_end - p2_begin)*1000) / CLOCKS_PER_SEC);
+
+        printf("Phase 3: %f s\n",(double)((p3_end - p3_begin)*1000) / CLOCKS_PER_SEC);
 
         // cleanup and exit
         free(result);
