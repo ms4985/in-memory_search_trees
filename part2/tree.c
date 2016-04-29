@@ -271,8 +271,8 @@ gettimeofday(&start1, NULL);
 //end = clock();
 //printf("end clock, new: %Lf", (long double)end);
 //printf("time, new: %Lf", (long double)(end-start));
-//	return (uint32_t) r;
-//}
+	return (uint32_t) r;
+}
 
 void cleanup_index(Tree* tree) {
 	free(tree->node_capacity);

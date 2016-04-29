@@ -20,6 +20,8 @@ int main(int argc, char* argv[]) {
                 assert(fanout[i] >= 2 && fanout[i] <= 17);
         }
 
+	clock_t p1_begin, p1_end, p2_begin, p2_end, p3_begin, p3_end;
+
         p1_end = p2_begin = clock();
 
         // building the tree index
