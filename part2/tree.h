@@ -11,7 +11,8 @@ typedef struct {
 } Tree;
 
 Tree* build_index(size_t num_levels, size_t fanout[], size_t num_keys, int32_t key[]);
-uint32_t probe_index(Tree* tree, int32_t probe_key);
+uint32_t probe_index_1(Tree* tree, int32_t probe_key);
+uint32_t probe_index_2(Tree* tree, int32_t probe_key);
 void cleanup_index(Tree* tree);
 
 #endif

@@ -121,7 +121,7 @@ uint32_t probe_index_1(Tree* tree, int32_t probe_key) {
 		size_t k = low;       // should go to child k
 		result1 = result1 * (tree->node_capacity[level] + 1) + k;
 	}
-	printf("%d %zu\n",probe_key, result1);
+	//printf("%d %zu\n",probe_key, result1);
 
 	return result1;
 }

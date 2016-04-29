@@ -45,15 +45,17 @@ int main(int argc, char* argv[]) {
         int32_t* probe = generate(num_probes, gen);
         assert(probe != NULL);
         free(gen);
-        uint32_t* result = malloc(sizeof(uint32_t) * num_probes);
-        assert(result != NULL);
+        uint32_t* result1 = malloc(sizeof(uint32_t) * num_probes);
+        uint32_t* result2 = malloc(sizeof(uint32_t) * num_probes);
+        assert(result1 != NULL);
+        assert(result2 != NULL);
 
         gettimeofday(&p1_end, NULL);
         gettimeofday(&p2_1begin, NULL);
-
+	
         // perform index probing (Phase 2 Part 1) 
         for (size_t i = 0; i < num_probes; ++i) {
-                result[i] = probe_index_1(tree, probe[i]);
+                result1[i] = probe_index_1(tree, probe[i]);
         }
 
         gettimeofday(&p2_1_end, NULL);
@@ -61,15 +63,21 @@ int main(int argc, char* argv[]) {
 
         // perform index probing (Phase 2 Part 2) 
         for (size_t i = 0; i < num_probes; ++i) {
-                result[i] = probe_index_2(tree, probe[i]);
+                result2[i] = probe_index_2(tree, probe[i]);
         }
 
         gettimeofday(&p2_2_end, NULL);
         gettimeofday(&p3_begin, NULL);
 
-        // output results
+	printf("Part1 Implementation Results\n");
+        // output results for part1
         for (size_t i = 0; i < num_probes; ++i) {
-                fprintf(stdout, "%d %u\n", probe[i], result[i]);
+                fprintf(stdout, "%d %u\n", probe[i], result1[i]);
+        }
+	printf("Part2 Implementation Results\n");
+        // output results for part2
+        for (size_t i = 0; i < num_probes; ++i) {
+                fprintf(stdout, "%d %u\n", probe[i], result2[i]);
         }
 
         gettimeofday(&p3_end, NULL);
@@ -86,7 +94,8 @@ int main(int argc, char* argv[]) {
         printf("Time elapsed for Phase3: %ld.%06ld s\n", (long int)p3res.tv_sec, (long int)p3res.tv_usec);
 
         // cleanup and exit
-        free(result);
+        free(result1);
+	free(result2);
         free(probe);
         cleanup_index(tree);
         return EXIT_SUCCESS;
