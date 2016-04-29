@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
                 assert(fanout[i] >= 2 && fanout[i] <= 17);
         }
 
-	struct timeval p1_begin, p1_end, p2_1_begin, p2_1_end, p2_2_begin, p2_2_end, p3_begin, p3_end, 
+	struct timeval p1_begin, p1_end, p2_1begin, p2_1_end, p2_2begin, p2_2_end, p3_begin, p3_end, 
 			p1res, p2_1res, p2_2res, p3res;
         
 	gettimeofday(&p1_begin, NULL);
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
         assert(result != NULL);
 
         gettimeofday(&p1_end, NULL);
-        gettimeofday(&p2_1_begin, NULL);
+        gettimeofday(&p2_1begin, NULL);
 
         // perform index probing (Phase 2 Part 1) 
         for (size_t i = 0; i < num_probes; ++i) {
@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
         }
 
         gettimeofday(&p2_1_end, NULL);
-        gettimeofday(&p2_2_begin, NULL);
+        gettimeofday(&p2_2begin, NULL);
 
         // perform index probing (Phase 2 Part 2) 
         for (size_t i = 0; i < num_probes; ++i) {
@@ -75,8 +75,8 @@ int main(int argc, char* argv[]) {
         gettimeofday(&p3_end, NULL);
 
         timersub(&p1_end, &p1_begin, &p1res);
-        timersub(&p2_1_end, &p2_1_begin, &p2_1res);
-        timersub(&p2_2_end, &p2_2_begin, &p2_2res);
+        timersub(&p2_1_end, &p2_1begin, &p2_1res);
+        timersub(&p2_2_end, &p2_2begin, &p2_2res);
         timersub(&p3_end, &p3_begin, &p3res);
 
 
