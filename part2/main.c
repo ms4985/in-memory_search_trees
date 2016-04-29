@@ -1,3 +1,5 @@
+#define _BSD_SOURCE 
+
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -21,10 +23,10 @@ int main(int argc, char* argv[]) {
                 assert(fanout[i] >= 2 && fanout[i] <= 17);
         }
 
-	struct timeval p1_begin, p1_end, p2_begin, p2_end, p3_begin, p3_end, p1res, p2res, p3res;
-
-        //p1_begin = time(NULL);
-        gettimeofday(&p1_begin, NULL);
+	struct timeval p1_begin, p1_end, p2_1_begin, p2_1_end, p2_2_begin, p2_2_end, p3_begin, p3_end, 
+			p1res, p2_1res, p2_2res, p3res;
+        
+	gettimeofday(&p1_begin, NULL);
 
         // building the tree index
         rand32_t* gen = rand32_init((uint32_t) time(NULL));
@@ -46,17 +48,23 @@ int main(int argc, char* argv[]) {
         uint32_t* result = malloc(sizeof(uint32_t) * num_probes);
         assert(result != NULL);
 
-        //p1_end = p2_begin = time(NULL);
         gettimeofday(&p1_end, NULL);
-        gettimeofday(&p2_begin, NULL);
+        gettimeofday(&p2-1_begin, NULL);
 
-        // perform index probing (Phase 2)
+        // perform index probing (Phase 2 Part 1) 
         for (size_t i = 0; i < num_probes; ++i) {
-                result[i] = probe_index(tree, probe[i]);
+                result[i] = probe_index_1(tree, probe[i]);
         }
 
-        //p2_end = p3_begin = time(NULL);
-        gettimeofday(&p2_end, NULL);
+        gettimeofday(&p2-1_end, NULL);
+        gettimeofday(&p2-2_begin, NULL);
+
+        // perform index probing (Phase 2 Part 2) 
+        for (size_t i = 0; i < num_probes; ++i) {
+                result[i] = probe_index_2(tree, probe[i]);
+        }
+
+        gettimeofday(&p2-2_end, NULL);
         gettimeofday(&p3_begin, NULL);
 
         // output results
@@ -64,24 +72,18 @@ int main(int argc, char* argv[]) {
                 fprintf(stdout, "%d %u\n", probe[i], result[i]);
         }
 
-        //p3_end = time(NULL);
         gettimeofday(&p3_end, NULL);
 
         timersub(&p1_end, &p1_begin, &p1res);
-        timersub(&p2_end, &p2_begin, &p2res);
+        timersub(&p2-1_end, &p2-1_begin, &p2-1res);
+        timersub(&p2-2_end, &p2-2_begin, &p2-2res);
         timersub(&p3_end, &p3_begin, &p3res);
 
-        /*
-        printf("Phase 1: %f s\n",(double)(difftime(p1_end, p1_begin))/10000); 
 
-        printf("Phase 2: %f s\n",(double)(difftime(p2_end, p2_begin))); 
-
-        printf("Phase 3: %f s\n",(double)(difftime(p3_end, p3_begin))); 
-        */
-
-        printf("Time elapsed for P1: %ld.%06ld\n", (long int)p1res.tv_sec, (long int)p1res.tv_usec);
-        printf("Time elapsed for P2: %ld.%06ld\n", (long int)p2res.tv_sec, (long int)p2res.tv_usec);
-        printf("Time elapsed for P3: %ld.%06ld\n", (long int)p3res.tv_sec, (long int)p3res.tv_usec);
+        printf("Time elapsed for Phase1: %ld.%06ld s\n", (long int)p1res.tv_sec, (long int)p1res.tv_usec);
+        printf("Time elapsed for Phase2 Part1: %ld.%06ld s\n", (long int)p2-1res.tv_sec, (long int)p2-1res.tv_usec);
+        printf("Time elapsed for Phase2 Part2: %ld.%06ld s\n", (long int)p2-2res.tv_sec, (long int)p2-2res.tv_usec);
+        printf("Time elapsed for Phase3: %ld.%06ld s\n", (long int)p3res.tv_sec, (long int)p3res.tv_usec);
 
         // cleanup and exit
         free(result);

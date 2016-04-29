@@ -90,35 +90,22 @@ Tree* build_index(size_t num_levels, size_t fanout[], size_t num_keys, int32_t k
 	}
 
 	// print the tree
+	/*
 	for (size_t i = 0; i < num_levels; ++i) {
 		printf("Level %zu:", i);
 		for (size_t j = 0; j < key_count[i]; ++j)
 			printf(" %d", tree->key_array[i][j]);
 		printf("\n");
 	}
+	*/
 
 	free(array_capacity);
 	free(key_count);
 	return tree;
 }
 
-uint32_t probe_index(Tree* tree, int32_t probe_key) {
+uint32_t probe_index_1(Tree* tree, int32_t probe_key) {
 
-struct timeval start1, end1;
-long mtime, secs, usecs;    
-
-gettimeofday(&start1, NULL);
-
-
-
-
-
-/* previous implementation:*/
-clock_t start, end;
-
-start = clock();
-printf("start clock, original: %Lf\n", (long double)start);
-	/* COMMENT THIS OUT BEFORE TIMING */
 	size_t result1 = 0;
 	for (size_t level = 0; level < tree->num_levels; ++level) {
 		size_t offset = result1 * tree->node_capacity[level];
@@ -134,53 +121,43 @@ printf("start clock, original: %Lf\n", (long double)start);
 		size_t k = low;       // should go to child k
 		result1 = result1 * (tree->node_capacity[level] + 1) + k;
 	}
-	printf("Answer should be %zu\n",result1);
-end = clock();
-printf("end clock, original: %Lf\n", (long double)end);
-printf("time, original: %Lf\n", (long double)(end-start));
+	printf("%d %zu\n",probe_key, result1);
 
-gettimeofday(&end1, NULL);
-secs  = end1.tv_sec  - start1.tv_sec;
-usecs = end1.tv_usec - start1.tv_usec;
-mtime = ((secs) * 1000 + usecs/1000.0) + 0.5;
-printf("Elapsed time: %ld millisecs\n", mtime);
+	return result1;
+}
 
-
-start = clock();
-printf("start clock, new: %Lf", (long double)start);
-
-	printf("probe is %d\n",probe_key);
+uint32_t probe_index_2(Tree* tree, int32_t probe_key) {
 
 	int rprev = 0;
 	int r = 0;
 	for (size_t level = 0; level < tree->num_levels; ++level) {
-		printf("rprev is %d at level %zu\n", rprev, level);
+		//printf("rprev is %d at level %zu\n", rprev, level);
 		if (tree->node_capacity[level] == 4) {
 			/* 5-way */
 			// access level 1 (non-root) of the index (5-way)
 			int32_t *index_L1 = tree->key_array[level];
 			__m128i lvl_1 = _mm_load_si128((__m128i*)&index_L1[rprev << 2]);
 			
-			int *val = (int*) &lvl_1;
-			printf("Numerical: %d %d %d %d \n", 
-				val[0], val[1], val[2], val[3]); 
+			//int *val = (int*) &lvl_1;
+			//printf("Numerical: %d %d %d %d \n", 
+				//val[0], val[1], val[2], val[3]); 
 
 			__m128i key = _mm_loadl_epi64((__m128i*)&probe_key);
 			key = _mm_shuffle_epi32(key, 0);
 
 			
-			val = (int*)&key;
+			//val = (int*)&key;
 			__m128i cmp_1i = _mm_cmpgt_epi32(lvl_1, key);
-			val = (int*) &cmp_1i;
+			//val = (int*) &cmp_1i;
 			__m128 cmp_1 = _mm_castsi128_ps(cmp_1i);
 			r = _mm_movemask_ps(cmp_1); // ps: epi32			
 			
 			int t1 = _bit_scan_forward(r); // it seems that we don't need ^ 0x1FF
 			r =t1;
-			printf("t1 is %d\n",t1);
+			//printf("t1 is %d\n",t1);
 			r += (rprev << 2) + rprev;
 			rprev = r;
-			printf("new r is %d\n", r);
+			//printf("new r is %d\n", r);
 
 		}
 		else if (tree->node_capacity[level] == 8) {
@@ -190,29 +167,29 @@ printf("start clock, new: %Lf", (long double)start);
 			__m128i lvl_2_A = _mm_load_si128((__m128i*)&index_L2[ r << 3]);
 			__m128i lvl_2_B = _mm_load_si128((__m128i*)&index_L2[(r << 3) + 4]);
 			
-
+			/*
 			int *val = (int*) &lvl_2_A;
 			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
 			val = (int*) &lvl_2_B;
 			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
-
+			*/
 
 			__m128i key = _mm_loadl_epi64((__m128i*)&probe_key);
 			key = _mm_shuffle_epi32(key, 0);
 
 
 			__m128i cmp_2_A = _mm_cmpgt_epi32(lvl_2_A, key);
-			val = (int*) &cmp_2_A;
+			//val = (int*) &cmp_2_A;
 			__m128i cmp_2_B = _mm_cmpgt_epi32(lvl_2_B, key);
-			val = (int*) &cmp_2_B;
+			//val = (int*) &cmp_2_B;
 			__m128i cmp_2 = _mm_packs_epi32(cmp_2_A, cmp_2_B);
-			val = (int*) &cmp_2;
+			//val = (int*) &cmp_2;
 			cmp_2 = _mm_packs_epi16(cmp_2, _mm_setzero_si128());
-			val = (int*) &cmp_2;
+			//val = (int*) &cmp_2;
 			r = _mm_movemask_epi8(cmp_2);
 			r = _bit_scan_forward(r);
 			r += (rprev << 3) + rprev;
-			printf("new r is %d\n", r);
+			//printf("new r is %d\n", r);
 			rprev = r;
 		}
 		else if (tree->node_capacity[level] == 16) {
@@ -234,6 +211,7 @@ printf("start clock, new: %Lf", (long double)start);
 			__m128i del_IJKL = _mm_load_si128((__m128i*)&index_level[(rprev << 4)+8]);
 			__m128i del_MNOP = _mm_load_si128((__m128i*)&index_level[(rprev << 4)+12]);
 
+			/*
 			int *val = (int*) &del_ABCD;
 			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
 			val = (int*) &del_EFGH;
@@ -242,7 +220,7 @@ printf("start clock, new: %Lf", (long double)start);
 			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
 			val = (int*) &del_MNOP;
 			printf("Numerical: %d %d %d %d \n", val[0], val[1], val[2], val[3]); 
-
+			*/
 
 			// compare with 16 delimiters stored in 4 registers
 			//__m128i tmp = _mm_load_si128( (__m128i*)&probe_key);
@@ -257,10 +235,10 @@ printf("start clock, new: %Lf", (long double)start);
 			// extract the mask the least significant bit
 			int mask = _mm_movemask_epi8(cmp_A_to_P);
 			r = _bit_scan_forward(mask | 0x10000); // asm: bsf
-			printf("r is %d\n", r);
-			printf("bit scan forward mask is %d\n", _bit_scan_forward(mask));
+			//printf("r is %d\n", r);
+			//printf("bit scan forward mask is %d\n", _bit_scan_forward(mask));
 			r += (rprev << 4) + rprev;
-			printf("new r is %d\n", r);
+			//printf("new r is %d\n", r);
 			rprev = r;
 		}
 		else {
@@ -268,9 +246,6 @@ printf("start clock, new: %Lf", (long double)start);
 			return -1;
 		}
 	}
-end = clock();
-printf("end clock, new: %Lf", (long double)end);
-printf("time, new: %Lf", (long double)(end-start));
 	return (uint32_t) r;
 }
 
