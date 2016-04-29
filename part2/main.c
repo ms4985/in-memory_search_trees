@@ -23,7 +23,6 @@ int main(int argc, char* argv[]) {
 	time_t p1_begin, p1_end, p2_begin, p2_end, p3_begin, p3_end;
 
         p1_begin = time(NULL);
-        printf("begin time: %ld\n", p1_begin);
 
         // building the tree index
         rand32_t* gen = rand32_init((uint32_t) time(NULL));
@@ -45,31 +44,29 @@ int main(int argc, char* argv[]) {
         uint32_t* result = malloc(sizeof(uint32_t) * num_probes);
         assert(result != NULL);
 
-        p1_end = p2_begin = clock();
-        printf("begin time: %ld\n", p2_begin);
+        p1_end = p2_begin = time(NULL);
 
         // perform index probing (Phase 2)
         for (size_t i = 0; i < num_probes; ++i) {
                 result[i] = probe_index(tree, probe[i]);
         }
 
-        p2_end = p3_begin = clock();
-        printf("begin time: %ld\n", p3_begin);
+        p2_end = p3_begin = time(NULL);
 
         // output results
         for (size_t i = 0; i < num_probes; ++i) {
                 fprintf(stdout, "%d %u\n", probe[i], result[i]);
         }
 
-        p3_end = clock();
+        p3_end = time(NULL);
 
         //printf("clocks per sec = %d\n", CLOCKS_PER_SEC);
 
-        printf("Phase 1: %f s\n",(double)((p1_end - p1_begin)); //*1000) / CLOCKS_PER_SEC);
+        printf("Phase 1: %f s\n",(double)(difftime(p1_end, p1_begin))/10000); //*1000) / CLOCKS_PER_SEC);
 
-        printf("Phase 2: %f s\n",(double)((p2_end - p2_begin)); //*1000) / CLOCKS_PER_SEC);
+        printf("Phase 2: %f s\n",(double)(difftime(p2_end, p2_begin))); //*1000) / CLOCKS_PER_SEC);
 
-        printf("Phase 3: %f s\n",(double)((p3_end - p3_begin)); //*1000) / CLOCKS_PER_SEC);
+        printf("Phase 3: %f s\n",(double)(difftime(p3_end, p3_begin))); //*1000) / CLOCKS_PER_SEC);
 
         // cleanup and exit
         free(result);
