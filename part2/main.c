@@ -49,22 +49,22 @@ int main(int argc, char* argv[]) {
         assert(result != NULL);
 
         gettimeofday(&p1_end, NULL);
-        gettimeofday(&p2-1_begin, NULL);
+        gettimeofday(&p2_1_begin, NULL);
 
         // perform index probing (Phase 2 Part 1) 
         for (size_t i = 0; i < num_probes; ++i) {
                 result[i] = probe_index_1(tree, probe[i]);
         }
 
-        gettimeofday(&p2-1_end, NULL);
-        gettimeofday(&p2-2_begin, NULL);
+        gettimeofday(&p2_1_end, NULL);
+        gettimeofday(&p2_2_begin, NULL);
 
         // perform index probing (Phase 2 Part 2) 
         for (size_t i = 0; i < num_probes; ++i) {
                 result[i] = probe_index_2(tree, probe[i]);
         }
 
-        gettimeofday(&p2-2_end, NULL);
+        gettimeofday(&p2_2_end, NULL);
         gettimeofday(&p3_begin, NULL);
 
         // output results
@@ -75,14 +75,14 @@ int main(int argc, char* argv[]) {
         gettimeofday(&p3_end, NULL);
 
         timersub(&p1_end, &p1_begin, &p1res);
-        timersub(&p2-1_end, &p2-1_begin, &p2-1res);
-        timersub(&p2-2_end, &p2-2_begin, &p2-2res);
+        timersub(&p2_1_end, &p2_1_begin, &p2_1res);
+        timersub(&p2_2_end, &p2_2_begin, &p2_2res);
         timersub(&p3_end, &p3_begin, &p3res);
 
 
         printf("Time elapsed for Phase1: %ld.%06ld s\n", (long int)p1res.tv_sec, (long int)p1res.tv_usec);
-        printf("Time elapsed for Phase2 Part1: %ld.%06ld s\n", (long int)p2-1res.tv_sec, (long int)p2-1res.tv_usec);
-        printf("Time elapsed for Phase2 Part2: %ld.%06ld s\n", (long int)p2-2res.tv_sec, (long int)p2-2res.tv_usec);
+        printf("Time elapsed for Phase2 Part1: %ld.%06ld s\n", (long int)p2_1res.tv_sec, (long int)p2_1res.tv_usec);
+        printf("Time elapsed for Phase2 Part2: %ld.%06ld s\n", (long int)p2_2res.tv_sec, (long int)p2_2res.tv_usec);
         printf("Time elapsed for Phase3: %ld.%06ld s\n", (long int)p3res.tv_sec, (long int)p3res.tv_usec);
 
         // cleanup and exit
